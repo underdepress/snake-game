@@ -19,53 +19,61 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  #game-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-  }
+  #game-wrapper { display: flex; flex-direction: column; align-items: center; gap: 14px; }
 
   #game-header {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 620px;
-    color: #e0e0e0;
-    font-size: 16px;
-    font-weight: 600;
-    padding: 0 8px;
-    gap: 12px;
+    display: flex; justify-content: space-between;
+    width: 100%; max-width: 620px; color: #e0e0e0;
+    font-size: 15px; font-weight: 600; padding: 0 8px; gap: 10px; flex-wrap: wrap;
   }
   #game-header span { color: #4eff4e; }
 
+  #expansion-hint { font-size: 13px; color: #888; font-weight: 400; }
+
   #canvas-container {
-    position: relative;
-    background: rgba(0,0,0,0.4);
-    border-radius: 12px;
-    padding: 8px;
-    box-shadow: 0 0 40px rgba(78,255,78,0.12), 0 8px 32px rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    position: relative; background: rgba(0,0,0,0.4); border-radius: 12px;
+    padding: 8px; box-shadow: 0 0 40px rgba(78,255,78,0.12), 0 8px 32px rgba(0,0,0,0.5);
+    display: flex; justify-content: center; align-items: center;
   }
 
-  #game-canvas {
-    display: block;
-    border-radius: 4px;
-    background: #0a0a1a;
-    image-rendering: auto;
-  }
-  #game-canvas.expanding {
-    animation: expandPulse 0.35s ease-out;
-  }
+  #game-canvas { display: block; border-radius: 4px; background: #0a0a1a; image-rendering: auto; }
+  #game-canvas.expanding { animation: expandPulse 0.35s ease-out; }
   @keyframes expandPulse {
     0%   { box-shadow: 0 0 0px rgba(78,255,78,0); }
     40%  { box-shadow: 0 0 36px rgba(78,255,78,0.7); }
     100% { box-shadow: 0 0 0px rgba(78,255,78,0); }
   }
 
-  /* D-pad */
+  /* ── Music toggle ──────────────────────────────────── */
+  #music-btn {
+    position: fixed; top: 16px; left: 16px; z-index: 200;
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(10,10,26,0.75);
+    color: #ccc; font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #music-btn:hover { border-color: rgba(255,255,255,0.4); }
+  #music-btn.muted { opacity: 0.45; color: #666; }
+
+  /* ── Pause overlay ─────────────────────────────────── */
+  #pause-overlay {
+    position: fixed; inset: 0; z-index: 85;
+    display: flex; justify-content: center; align-items: center;
+    pointer-events: none;
+    background: rgba(0,0,0,0.45);
+    animation: fadeIn 0.15s ease;
+  }
+  #pause-text {
+    font-size: 56px; font-weight: 900; color: #fff;
+    text-shadow: 0 0 40px rgba(255,255,255,0.4);
+    letter-spacing: 8px;
+  }
+
+  /* ── D-pad ─────────────────────────────────────────── */
   #dpad {
     display: grid;
     grid-template-columns: 56px 56px 56px;
@@ -73,45 +81,26 @@
     gap: 4px;
   }
   .dpad-btn {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 10px;
-    color: #ccc;
-    font-size: 24px;
-    cursor: pointer;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.1s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px; color: #ccc; font-size: 24px; cursor: pointer;
+    user-select: none; -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s; display: flex; align-items: center; justify-content: center;
     touch-action: manipulation;
   }
   .dpad-btn:active { background: rgba(78,255,78,0.3); color: #4eff4e; }
 
-  /* Overlay screens */
+  /* ── Overlay screens ───────────────────────────────── */
   .overlay {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 100;
-    background: rgba(0,0,0,0.72);
-    animation: fadeIn 0.2s ease;
+    position: fixed; inset: 0; display: flex; justify-content: center; align-items: center;
+    z-index: 100; background: rgba(0,0,0,0.72); animation: fadeIn 0.2s ease;
   }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
   .card {
     background: linear-gradient(145deg, #1e1e3a, #25254a);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 20px;
-    padding: 36px 40px;
-    text-align: center;
-    color: #e0e0e0;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-    max-width: 420px;
-    width: 90%;
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
+    padding: 36px 40px; text-align: center; color: #e0e0e0;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6); max-width: 420px; width: 90%;
     animation: slideUp 0.25s ease;
   }
   @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -119,106 +108,55 @@
   .card h1 {
     font-size: 42px;
     background: linear-gradient(90deg, #4eff4e, #00c9ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 8px;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; margin-bottom: 8px;
   }
   .card h2 { font-size: 24px; margin-bottom: 16px; color: #ccc; }
   .card p { margin: 6px 0; font-size: 15px; }
   .card .highlight { color: #4eff4e; font-weight: 700; font-size: 28px; }
 
   .btn {
-    display: block;
-    width: 100%;
-    padding: 14px 0;
-    margin: 10px 0;
-    border: none;
-    border-radius: 12px;
-    font-size: 17px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: transform 0.12s, box-shadow 0.12s;
-    letter-spacing: 1px;
+    display: block; width: 100%; padding: 14px 0; margin: 10px 0;
+    border: none; border-radius: 12px; font-size: 17px; font-weight: 700;
+    cursor: pointer; transition: transform 0.12s, box-shadow 0.12s; letter-spacing: 1px;
   }
   .btn:active { transform: scale(0.97); }
-  .btn-primary {
-    background: linear-gradient(135deg, #4eff4e, #00b34e);
-    color: #0a0a1a;
-    box-shadow: 0 4px 20px rgba(78,255,78,0.3);
-  }
+  .btn-primary { background: linear-gradient(135deg, #4eff4e, #00b34e); color: #0a0a1a; box-shadow: 0 4px 20px rgba(78,255,78,0.3); }
   .btn-primary:hover { box-shadow: 0 6px 28px rgba(78,255,78,0.5); }
-  .btn-secondary {
-    background: rgba(255,255,255,0.08);
-    color: #ccc;
-    border: 1px solid rgba(255,255,255,0.2);
-  }
+  .btn-secondary { background: rgba(255,255,255,0.08); color: #ccc; border: 1px solid rgba(255,255,255,0.2); }
   .btn-secondary:hover { background: rgba(255,255,255,0.14); }
 
-  .leaderboard-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 16px 0;
-    font-size: 14px;
-  }
-  .leaderboard-table th {
-    color: #aaa;
-    font-weight: 500;
-    padding: 8px 6px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-  }
-  .leaderboard-table td {
-    padding: 8px 6px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-  }
+  .leaderboard-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  .leaderboard-table th { color: #aaa; font-weight: 500; padding: 8px 6px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .leaderboard-table td { padding: 8px 6px; border-bottom: 1px solid rgba(255,255,255,0.05); }
   .leaderboard-table .rank-1 { color: #ffd700; font-weight: 700; }
   .leaderboard-table .rank-2 { color: #c0c0c0; font-weight: 700; }
   .leaderboard-table .rank-3 { color: #cd7f32; font-weight: 700; }
 
   #name-input {
-    width: 100%;
-    padding: 12px 14px;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(0,0,0,0.3);
-    color: #fff;
-    font-size: 16px;
-    text-align: center;
-    outline: none;
-    margin: 10px 0;
+    width: 100%; padding: 12px 14px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3);
+    color: #fff; font-size: 16px; text-align: center; outline: none; margin: 10px 0;
   }
   #name-input:focus { border-color: #4eff4e; }
   #name-input::placeholder { color: #666; }
 
   .hidden { display: none !important; }
+  .empty-state { color: #666; padding: 30px 0; font-size: 15px; }
 
-  .empty-state {
-    color: #666;
-    padding: 30px 0;
-    font-size: 15px;
-  }
-
-  /* Countdown */
+  /* ── Countdown ─────────────────────────────────────── */
   #countdown-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 90;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    pointer-events: none;
+    position: fixed; inset: 0; z-index: 90;
+    display: flex; justify-content: center; align-items: center; pointer-events: none;
   }
   #countdown-text {
-    font-size: 120px;
-    font-weight: 900;
-    color: #4eff4e;
+    font-size: 120px; font-weight: 900; color: #4eff4e;
     text-shadow: 0 0 60px rgba(78,255,78,0.8), 0 0 120px rgba(78,255,78,0.4);
-    will-change: transform, opacity;
-    animation: countPop 0.7s ease-out;
+    will-change: transform, opacity; animation: countPop 0.7s ease-out;
   }
   @keyframes countPop {
-    0%   { transform: scale(1.6); opacity: 0; }
-    30%  { opacity: 1; }
+    0% { transform: scale(1.6); opacity: 0; }
+    30% { opacity: 1; }
     100% { transform: scale(0.8); opacity: 0.7; }
   }
 
@@ -227,18 +165,24 @@
     .dpad-btn { font-size: 20px; border-radius: 8px; }
     .card { padding: 24px 18px; }
     .card h1 { font-size: 30px; }
-    #game-header { font-size: 13px; gap: 6px; }
+    #game-header { font-size: 12px; gap: 4px; }
     #countdown-text { font-size: 80px; }
+    #music-btn { top: 10px; left: 10px; width: 34px; height: 34px; font-size: 16px; }
+    #pause-text { font-size: 40px; }
   }
 </style>
 </head>
 <body>
+
+<!-- Music toggle (always visible) -->
+<button id="music-btn" title="音乐 开/关 (M键)">🎵</button>
 
 <div id="game-wrapper">
   <div id="game-header" class="hidden">
     <div>🍎 分数: <span id="score-display">0</span></div>
     <div>📏 长度: <span id="length-display">3</span></div>
     <div>🗺️ 区域: <span id="grid-display">14×14</span></div>
+    <div id="expansion-hint"></div>
   </div>
 
   <div id="canvas-container">
@@ -246,15 +190,9 @@
   </div>
 
   <div id="dpad" class="hidden">
-    <div></div>
-    <button class="dpad-btn" data-dir="up">▲</button>
-    <div></div>
-    <button class="dpad-btn" data-dir="left">◀</button>
-    <div></div>
-    <button class="dpad-btn" data-dir="right">▶</button>
-    <div></div>
-    <button class="dpad-btn" data-dir="down">▼</button>
-    <div></div>
+    <div></div> <button class="dpad-btn" data-dir="up">▲</button> <div></div>
+    <button class="dpad-btn" data-dir="left">◀</button> <div></div> <button class="dpad-btn" data-dir="right">▶</button>
+    <div></div> <button class="dpad-btn" data-dir="down">▼</button> <div></div>
   </div>
 </div>
 
@@ -269,9 +207,10 @@
 </div>
 
 <!-- Countdown -->
-<div id="countdown-overlay" class="hidden">
-  <div id="countdown-text"></div>
-</div>
+<div id="countdown-overlay" class="hidden"><div id="countdown-text"></div></div>
+
+<!-- Pause overlay -->
+<div id="pause-overlay" class="hidden"><div id="pause-text">⏸ 暂停</div></div>
 
 <!-- Game over modal -->
 <div id="game-over-modal" class="overlay hidden">
@@ -308,6 +247,7 @@
   var BASE_TICK_MS = 140;
   var MIN_TICK_MS = 70;
   var LS_KEY = 'snake_game_leaderboard';
+  var LS_MUSIC = 'snake_game_music';
 
   // ── DOM refs ───────────────────────────────────────────
   var canvas = document.getElementById('game-canvas');
@@ -315,8 +255,11 @@
   var scoreDisplay = document.getElementById('score-display');
   var lengthDisplay = document.getElementById('length-display');
   var gridDisplay = document.getElementById('grid-display');
+  var expansionHint = document.getElementById('expansion-hint');
   var gameHeader = document.getElementById('game-header');
   var dpad = document.getElementById('dpad');
+  var musicBtn = document.getElementById('music-btn');
+  var pauseOverlay = document.getElementById('pause-overlay');
 
   var startScreen = document.getElementById('start-screen');
   var countdownOverlay = document.getElementById('countdown-overlay');
@@ -330,22 +273,146 @@
   var leaderboardContent = document.getElementById('leaderboard-content');
 
   // ── Game state ─────────────────────────────────────────
-  var snake, food, direction, nextDirection, score, gridSize, gameRunning;
+  var snake, food, direction, nextDirection, score, gridSize, gameRunning, paused;
   var tickInterval, lastTime, accumulator, animId;
   var particles = [];
   var gridCache = null;
+
+  // ── Audio system ───────────────────────────────────────
+  var audioCtx = null;
+  var musicOn = true;
+  var musicTimer = null;
+  var musicNoteIdx = 0;
+  var BPM = 138;
+  var BEAT = 60 / BPM;
+
+  // Pentatonic melody — happy chiptune loop (freq, beats)
+  var melody = [
+    [523,1],[659,1],[784,1],[880,1], [1047,1],[880,1],[784,1],[659,1],
+    [523,2],[0,0.3],
+    [1047,0.5],[1175,0.5],[1047,1],[880,0.5],[784,0.5],
+    [659,1],[784,0.5],[880,0.5],[784,2],[0,0.3],
+    [659,0.5],[784,0.5],[880,0.5],[1047,0.5],[1175,1],[1047,0.5],[880,0.5],
+    [784,1],[659,0.5],[523,0.5],[784,2],[0,0.3],
+    [880,1],[1047,1],[1175,1],[1319,1],[1568,0.5],[1319,0.5],[1175,1],
+    [1047,1],[880,0.5],[784,0.5],[659,2],[0,0.5]
+  ];
+
+  function initAudio() {
+    if (audioCtx) return;
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch(e) { audioCtx = null; }
+  }
+
+  function playNote(freq, startTime, dur, type, vol) {
+    if (!audioCtx) return;
+    type = type || 'square';
+    vol = (vol || 0.18);
+    try {
+      var osc = audioCtx.createOscillator();
+      var g = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(vol, startTime);
+      g.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
+      osc.connect(g); g.connect(audioCtx.destination);
+      osc.start(startTime); osc.stop(startTime + dur);
+    } catch(e) {}
+  }
+
+  // Sfx: short rising chirp
+  function sfxEat() {
+    if (!audioCtx || !musicOn) return;
+    var t = audioCtx.currentTime;
+    playNote(660, t, 0.08, 'square', 0.12);
+    playNote(880, t + 0.06, 0.10, 'square', 0.10);
+    playNote(1100, t + 0.10, 0.08, 'square', 0.08);
+  }
+
+  // Sfx: descending buzz
+  function sfxDie() {
+    if (!audioCtx || !musicOn) return;
+    var t = audioCtx.currentTime;
+    playNote(440, t, 0.15, 'sawtooth', 0.15);
+    playNote(330, t + 0.12, 0.15, 'sawtooth', 0.12);
+    playNote(220, t + 0.22, 0.25, 'sawtooth', 0.10);
+    playNote(110, t + 0.32, 0.35, 'sawtooth', 0.08);
+  }
+
+  function sfxCount() {
+    if (!audioCtx || !musicOn) return;
+    playNote(880, audioCtx.currentTime, 0.12, 'sine', 0.2);
+  }
+
+  function sfxGo() {
+    if (!audioCtx || !musicOn) return;
+    var t = audioCtx.currentTime;
+    playNote(880, t, 0.1, 'sine', 0.2);
+    playNote(1100, t + 0.08, 0.15, 'sine', 0.25);
+  }
+
+  function scheduleMelody() {
+    if (!musicOn || !audioCtx) return;
+    var now = audioCtx.currentTime;
+    var t = now + 0.05;
+    var totalBeats = 0;
+    for (var i = 0; i < melody.length; i++) {
+      var f = melody[i][0];
+      var beats = melody[i][1];
+      var dur = beats * BEAT;
+      if (f > 0) playNote(f, t, dur * 0.82, 'square', 0.14);
+      t += dur;
+      totalBeats += beats;
+    }
+    var loopMs = totalBeats * BEAT * 1000;
+    musicTimer = setTimeout(scheduleMelody, loopMs - 80);
+  }
+
+  function startMusic() {
+    initAudio();
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    stopMusicLoop();
+    musicOn = true;
+    try { localStorage.setItem(LS_MUSIC, '1'); } catch(e) {}
+    musicBtn.textContent = '🎵';
+    musicBtn.classList.remove('muted');
+    scheduleMelody();
+  }
+
+  function stopMusic() {
+    stopMusicLoop();
+    musicOn = false;
+    try { localStorage.setItem(LS_MUSIC, '0'); } catch(e) {}
+    musicBtn.textContent = '🔇';
+    musicBtn.classList.add('muted');
+  }
+
+  function stopMusicLoop() {
+    if (musicTimer) { clearTimeout(musicTimer); musicTimer = null; }
+  }
+
+  function toggleMusic() {
+    if (musicOn) { stopMusic(); } else { startMusic(); }
+  }
+
+  // Load music preference
+  (function() {
+    var saved;
+    try { saved = localStorage.getItem(LS_MUSIC); } catch(e) {}
+    if (saved === '0') { musicOn = false; musicBtn.textContent = '🔇'; musicBtn.classList.add('muted'); }
+  })();
 
   // ── Leaderboard ────────────────────────────────────────
   function getLeaderboard() {
     try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; }
     catch (e) { return []; }
   }
-
   function saveLeaderboard(board) {
     try { localStorage.setItem(LS_KEY, JSON.stringify(board)); }
     catch (e) {}
   }
-
   function addScore(name, sc, len) {
     var board = getLeaderboard();
     var entryName = name || '匿名玩家';
@@ -358,7 +425,6 @@
     }
     return -1;
   }
-
   function renderLeaderboard() {
     var board = getLeaderboard();
     if (board.length === 0) {
@@ -369,25 +435,21 @@
     for (var i = 0; i < board.length; i++) {
       var e = board[i];
       var rc = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
-      var div = document.createElement('div');
-      div.textContent = e.name;
+      var div = document.createElement('div'); div.textContent = e.name;
       html += '<tr><td class="' + rc + '">' + (i + 1) + '</td><td>' + div.innerHTML + '</td><td>' + e.score + '</td><td>' + e.length + '</td><td style="color:#888;">' + e.date + '</td></tr>';
     }
     html += '</tbody></table>';
     leaderboardContent.innerHTML = html;
   }
 
-  // ── Grid cache (offscreen canvas) ──────────────────────
+  // ── Grid cache ─────────────────────────────────────────
   function updateGridCache() {
     var size = gridSize * CELL_SIZE;
     gridCache = document.createElement('canvas');
-    gridCache.width = size;
-    gridCache.height = size;
+    gridCache.width = size; gridCache.height = size;
     var gctx = gridCache.getContext('2d');
-    gctx.fillStyle = '#0a0a1a';
-    gctx.fillRect(0, 0, size, size);
-    gctx.strokeStyle = 'rgba(255,255,255,0.03)';
-    gctx.lineWidth = 0.5;
+    gctx.fillStyle = '#0a0a1a'; gctx.fillRect(0, 0, size, size);
+    gctx.strokeStyle = 'rgba(255,255,255,0.03)'; gctx.lineWidth = 0.5;
     for (var i = 0; i <= gridSize; i++) {
       var pos = i * CELL_SIZE;
       gctx.beginPath(); gctx.moveTo(pos, 0); gctx.lineTo(pos, size); gctx.stroke();
@@ -402,14 +464,21 @@
     return Math.min(INITIAL_GRID + Math.floor(extra / SEGMENTS_PER_GROWTH), MAX_GRID);
   }
 
+  function updateExpansionHint() {
+    if (gridSize >= MAX_GRID) { expansionHint.textContent = '已达最大区域'; return; }
+    var extra = snake.length - INITIAL_SNAKE_LENGTH;
+    var mod = extra % SEGMENTS_PER_GROWTH;
+    var needed = SEGMENTS_PER_GROWTH - mod;
+    if (needed === 0 && extra > 0) needed = SEGMENTS_PER_GROWTH;
+    expansionHint.textContent = '还需 ' + needed + ' 食物扩大区域';
+  }
+
   function resizeCanvas(newGridSize) {
     var prev = gridSize;
     gridSize = newGridSize;
     var size = gridSize * CELL_SIZE;
-    canvas.width = size;
-    canvas.height = size;
-    canvas.style.width = size + 'px';
-    canvas.style.height = size + 'px';
+    canvas.width = size; canvas.height = size;
+    canvas.style.width = size + 'px'; canvas.style.height = size + 'px';
     gridDisplay.textContent = gridSize + '×' + gridSize;
     updateGridCache();
     if (prev !== gridSize) {
@@ -417,19 +486,16 @@
       void canvas.offsetWidth;
       canvas.classList.add('expanding');
     }
+    updateExpansionHint();
   }
 
   function placeFood() {
     var occupied = {};
-    for (var i = 0; i < snake.length; i++) {
-      occupied[snake[i].x + ',' + snake[i].y] = true;
-    }
+    for (var i = 0; i < snake.length; i++) occupied[snake[i].x + ',' + snake[i].y] = true;
     var free = [];
-    for (var x = 0; x < gridSize; x++) {
-      for (var y = 0; y < gridSize; y++) {
+    for (var x = 0; x < gridSize; x++)
+      for (var y = 0; y < gridSize; y++)
         if (!occupied[x + ',' + y]) free.push({ x: x, y: y });
-      }
-    }
     if (free.length === 0) return null;
     food = free[Math.floor(Math.random() * free.length)];
     return food;
@@ -442,14 +508,9 @@
     for (var i = 0; i < 6; i++) {
       particles.push({
         x: cx, y: cy,
-        vx: (Math.random() - 0.5) * 5,
-        vy: (Math.random() - 0.5) * 5,
-        life: 1,
-        decay: 0.025 + Math.random() * 0.035,
-        size: 2 + Math.random() * 3,
-        r: green ? 78 : 255,
-        g: green ? 255 : 204,
-        b: green ? 78 : 0
+        vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5,
+        life: 1, decay: 0.025 + Math.random() * 0.035, size: 2 + Math.random() * 3,
+        r: green ? 78 : 255, g: green ? 255 : 204, b: green ? 78 : 0
       });
     }
   }
@@ -457,22 +518,17 @@
   function initGame() {
     gridSize = INITIAL_GRID;
     snake = [];
-    var cx = Math.floor(INITIAL_GRID / 2);
-    var cy = Math.floor(INITIAL_GRID / 2);
-    for (var i = INITIAL_SNAKE_LENGTH - 1; i >= 0; i--) {
-      snake.push({ x: cx - i, y: cy });
-    }
-    direction = { x: 1, y: 0 };
-    nextDirection = { x: 1, y: 0 };
-    score = 0;
-    tickInterval = BASE_TICK_MS;
-    lastTime = 0;
-    accumulator = 0;
-    particles.length = 0;
+    var cx = Math.floor(INITIAL_GRID / 2), cy = Math.floor(INITIAL_GRID / 2);
+    for (var i = INITIAL_SNAKE_LENGTH - 1; i >= 0; i--) snake.push({ x: cx - i, y: cy });
+    direction = { x: 1, y: 0 }; nextDirection = { x: 1, y: 0 };
+    score = 0; tickInterval = BASE_TICK_MS;
+    lastTime = 0; accumulator = 0; paused = false;
+    particles.length = 0; pauseOverlay.classList.add('hidden');
     resizeCanvas(INITIAL_GRID);
     placeFood();
     scoreDisplay.textContent = '0';
     lengthDisplay.textContent = String(INITIAL_SNAKE_LENGTH);
+    updateExpansionHint();
   }
 
   function update() {
@@ -483,8 +539,7 @@
     if (nh.x < 0 || nh.x >= gridSize || nh.y < 0 || nh.y >= gridSize) { endGame(); return; }
 
     var willGrow = (food && nh.x === food.x && nh.y === food.y);
-    var startIdx = willGrow ? 0 : 1;
-    for (var i = startIdx; i < snake.length; i++) {
+    for (var i = willGrow ? 0 : 1; i < snake.length; i++) {
       if (snake[i].x === nh.x && snake[i].y === nh.y) { endGame(); return; }
     }
 
@@ -492,6 +547,7 @@
 
     if (willGrow) {
       score++;
+      sfxEat();
       spawnParticles(food.x, food.y);
       var newGs = computeGridSize();
       if (newGs !== gridSize) resizeCanvas(newGs);
@@ -499,6 +555,7 @@
       tickInterval = Math.max(MIN_TICK_MS, BASE_TICK_MS - score * 2);
       scoreDisplay.textContent = score;
       lengthDisplay.textContent = snake.length;
+      updateExpansionHint();
     } else {
       snake.shift();
     }
@@ -507,7 +564,6 @@
   function draw() {
     ctx.drawImage(gridCache, 0, 0);
 
-    // Food
     if (food) {
       var fx = food.x * CELL_SIZE + CELL_SIZE / 2;
       var fy = food.y * CELL_SIZE + CELL_SIZE / 2;
@@ -517,65 +573,49 @@
       ctx.fillStyle = glow;
       ctx.fillRect(food.x * CELL_SIZE - CELL_SIZE, food.y * CELL_SIZE - CELL_SIZE, CELL_SIZE * 3, CELL_SIZE * 3);
       ctx.fillStyle = '#ff5050';
-      ctx.beginPath();
-      ctx.arc(fx, fy, CELL_SIZE * 0.4, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(fx, fy, CELL_SIZE * 0.4, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = 'rgba(255,255,255,0.4)';
-      ctx.beginPath();
-      ctx.arc(fx - 2, fy - 2, CELL_SIZE * 0.15, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(fx - 2, fy - 2, CELL_SIZE * 0.15, 0, Math.PI * 2); ctx.fill();
     }
 
-    // Snake
     var len = snake.length;
     for (var i = 0; i < len; i++) {
-      var seg = snake[i];
-      var sx = seg.x * CELL_SIZE;
-      var sy = seg.y * CELL_SIZE;
+      var seg = snake[i], sx = seg.x * CELL_SIZE, sy = seg.y * CELL_SIZE;
       if (i === len - 1) {
         ctx.fillStyle = '#5eff5e';
-        ctx.shadowColor = 'rgba(94,255,94,0.5)';
-        ctx.shadowBlur = 5;
+        ctx.shadowColor = 'rgba(94,255,94,0.5)'; ctx.shadowBlur = 5;
         ctx.fillRect(sx + 1, sy + 1, CELL_SIZE - 2, CELL_SIZE - 2);
         ctx.shadowBlur = 0;
         ctx.fillStyle = '#0a0a1a';
-        var es = CELL_SIZE * 0.22;
-        var ex1, ey1, ex2, ey2;
-        if (direction.x === 1)       { ex1 = sx + CELL_SIZE * 0.58; ey1 = sy + CELL_SIZE * 0.18; ex2 = sx + CELL_SIZE * 0.58; ey2 = sy + CELL_SIZE * 0.58; }
-        else if (direction.x === -1) { ex1 = sx + CELL_SIZE * 0.20; ey1 = sy + CELL_SIZE * 0.18; ex2 = sx + CELL_SIZE * 0.20; ey2 = sy + CELL_SIZE * 0.58; }
-        else if (direction.y === -1) { ex1 = sx + CELL_SIZE * 0.18; ey1 = sy + CELL_SIZE * 0.20; ex2 = sx + CELL_SIZE * 0.58; ey2 = sy + CELL_SIZE * 0.20; }
-        else                         { ex1 = sx + CELL_SIZE * 0.18; ey1 = sy + CELL_SIZE * 0.58; ex2 = sx + CELL_SIZE * 0.58; ey2 = sy + CELL_SIZE * 0.58; }
-        ctx.fillRect(ex1, ey1, es, es);
-        ctx.fillRect(ex2, ey2, es, es);
+        var es = CELL_SIZE * 0.22, ex1, ey1, ex2, ey2;
+        if (direction.x === 1)       { ex1 = sx+CELL_SIZE*0.58; ey1 = sy+CELL_SIZE*0.18; ex2 = sx+CELL_SIZE*0.58; ey2 = sy+CELL_SIZE*0.58; }
+        else if (direction.x === -1) { ex1 = sx+CELL_SIZE*0.20; ey1 = sy+CELL_SIZE*0.18; ex2 = sx+CELL_SIZE*0.20; ey2 = sy+CELL_SIZE*0.58; }
+        else if (direction.y === -1) { ex1 = sx+CELL_SIZE*0.18; ey1 = sy+CELL_SIZE*0.20; ex2 = sx+CELL_SIZE*0.58; ey2 = sy+CELL_SIZE*0.20; }
+        else                         { ex1 = sx+CELL_SIZE*0.18; ey1 = sy+CELL_SIZE*0.58; ex2 = sx+CELL_SIZE*0.58; ey2 = sy+CELL_SIZE*0.58; }
+        ctx.fillRect(ex1, ey1, es, es); ctx.fillRect(ex2, ey2, es, es);
       } else {
         var t = i / len;
-        var g = Math.floor(180 + t * 75);
-        ctx.fillStyle = 'rgb(30,' + g + ',30)';
+        ctx.fillStyle = 'rgb(30,' + Math.floor(180 + t * 75) + ',30)';
         ctx.fillRect(sx + 2, sy + 2, CELL_SIZE - 4, CELL_SIZE - 4);
       }
     }
 
-    // Particles
     for (var i = particles.length - 1; i >= 0; i--) {
       var p = particles[i];
-      p.x += p.vx;
-      p.y += p.vy;
-      p.life -= p.decay;
+      p.x += p.vx; p.y += p.vy; p.life -= p.decay;
       if (p.life <= 0) { particles.splice(i, 1); continue; }
       ctx.fillStyle = 'rgba(' + p.r + ',' + p.g + ',' + p.b + ',' + p.life.toFixed(3) + ')';
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2); ctx.fill();
     }
   }
 
   function gameLoop(ts) {
     if (!gameRunning) return;
     animId = requestAnimationFrame(gameLoop);
+    if (paused) { draw(); return; }
     if (lastTime === 0) lastTime = ts;
     var delta = ts - lastTime;
     lastTime = ts;
-    // Clamp delta to avoid spiral of death after tab switch
     if (delta > 500) delta = tickInterval;
     accumulator += delta;
     while (accumulator >= tickInterval) {
@@ -586,9 +626,24 @@
     draw();
   }
 
+  function togglePause() {
+    if (!gameRunning) return;
+    paused = !paused;
+    if (paused) {
+      pauseOverlay.classList.remove('hidden');
+    } else {
+      pauseOverlay.classList.add('hidden');
+      lastTime = 0;
+      accumulator = 0;
+    }
+  }
+
   function endGame() {
     gameRunning = false;
+    stopMusicLoop();
     if (animId) { cancelAnimationFrame(animId); animId = null; }
+    sfxDie();
+    pauseOverlay.classList.add('hidden');
     finalScoreEl.textContent = score;
     finalLengthEl.textContent = snake.length;
 
@@ -622,15 +677,12 @@
     var steps = ['3', '2', '1', '开始！'];
     var i = 0;
     function show() {
-      if (i >= steps.length) {
-        countdownOverlay.classList.add('hidden');
-        callback();
-        return;
-      }
+      if (i >= steps.length) { countdownOverlay.classList.add('hidden'); callback(); return; }
       countdownText.textContent = steps[i];
       countdownText.style.animation = 'none';
       void countdownText.offsetWidth;
       countdownText.style.animation = 'countPop 0.7s ease-out';
+      if (i < 3) sfxCount(); else sfxGo();
       i++;
       setTimeout(show, i === steps.length ? 500 : 800);
     }
@@ -645,29 +697,30 @@
     leaderboardModal.classList.add('hidden');
     gameHeader.classList.remove('hidden');
     dpad.classList.remove('hidden');
-
+    if (musicOn) startMusic();
     runCountdown(function() {
       gameRunning = true;
-      lastTime = 0;
-      accumulator = 0;
+      lastTime = 0; accumulator = 0;
       animId = requestAnimationFrame(gameLoop);
     });
   }
 
   function backToMenu() {
-    gameRunning = false;
+    gameRunning = false; paused = false;
+    stopMusicLoop();
     if (animId) { cancelAnimationFrame(animId); animId = null; }
     gameOverModal.classList.add('hidden');
     leaderboardModal.classList.add('hidden');
     countdownOverlay.classList.add('hidden');
+    pauseOverlay.classList.add('hidden');
     gameHeader.classList.add('hidden');
     dpad.classList.add('hidden');
     startScreen.classList.remove('hidden');
   }
 
-  // ── Input handling ─────────────────────────────────────
+  // ── Input ──────────────────────────────────────────────
   function setDirection(dir) {
-    if (!gameRunning) return;
+    if (!gameRunning || paused) return;
     if ((dir.x !== 0 && dir.x === -nextDirection.x) || (dir.y !== 0 && dir.y === -nextDirection.y)) return;
     if ((dir.x !== 0 && dir.x === -direction.x) || (dir.y !== 0 && dir.y === -direction.y)) return;
     nextDirection = dir;
@@ -680,11 +733,12 @@
     };
     var d = map[e.key];
     if (d) { e.preventDefault(); setDirection({ x: d[0], y: d[1] }); }
+    if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') { e.preventDefault(); togglePause(); }
+    if (e.key === 'm' || e.key === 'M') { e.preventDefault(); toggleMusic(); }
   });
 
-  // Prevent arrow key scrolling during game
   window.addEventListener('keydown', function(e) {
-    if (gameRunning && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].indexOf(e.key) !== -1) {
+    if (gameRunning && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','p','P','Escape'].indexOf(e.key) !== -1) {
       e.preventDefault();
     }
   }, { passive: false });
@@ -700,7 +754,7 @@
     });
   }
 
-  // Swipe on canvas
+  // Swipe
   var tsX = 0, tsY = 0;
   canvas.addEventListener('touchstart', function(e) {
     tsX = e.touches[0].clientX; tsY = e.touches[0].clientY;
@@ -709,17 +763,15 @@
     var dx = (e.changedTouches[0] ? e.changedTouches[0].clientX : 0) - tsX;
     var dy = (e.changedTouches[0] ? e.changedTouches[0].clientY : 0) - tsY;
     if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return;
-    if (Math.abs(dx) > Math.abs(dy)) {
-      setDirection({ x: dx > 0 ? 1 : -1, y: 0 });
-    } else {
-      setDirection({ x: 0, y: dy > 0 ? 1 : -1 });
-    }
+    setDirection({ x: Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : -1) : 0,
+                   y: Math.abs(dx) > Math.abs(dy) ? 0 : (dy > 0 ? 1 : -1) });
   });
 
   // ── Buttons ────────────────────────────────────────────
   document.getElementById('btn-start').addEventListener('click', startGame);
   document.getElementById('btn-restart').addEventListener('click', startGame);
   document.getElementById('btn-menu').addEventListener('click', backToMenu);
+  musicBtn.addEventListener('click', toggleMusic);
 
   document.getElementById('btn-leaderboard').addEventListener('click', function() {
     renderLeaderboard();
@@ -728,7 +780,6 @@
   document.getElementById('btn-close-leaderboard').addEventListener('click', function() {
     leaderboardModal.classList.add('hidden');
   });
-
   document.getElementById('btn-submit-score').addEventListener('click', function() {
     var name = nameInput.value.trim() || '匿名玩家';
     var rank = addScore(name, score, snake.length);
