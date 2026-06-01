@@ -285,6 +285,8 @@
   var musicNoteIdx = 0;
   var BPM = 138;
   var BEAT = 60 / BPM;
+  var foodGlowCache = null;   // cached food glow offscreen canvas
+  var audioResuming = false;  // guard against double-resume
 
   // Pentatonic melody — happy chiptune loop (freq, beats)
   var melody = [
@@ -299,16 +301,21 @@
   ];
 
   function initAudio() {
-    if (audioCtx) return;
+    if (audioCtx) {
+      // Recreate if context is closed
+      if (audioCtx.state === 'closed') audioCtx = null;
+      else return;
+    }
     try {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     } catch(e) { audioCtx = null; }
   }
 
-  function playNote(freq, startTime, dur, type, vol) {
-    if (!audioCtx) return;
+  function playNote(freq, startTime, dur, type, vol, pan) {
+    if (!audioCtx || audioCtx.state === 'closed') return;
     type = type || 'square';
     vol = (vol || 0.18);
+    if (startTime < audioCtx.currentTime - 0.1) return; // skip stale notes
     try {
       var osc = audioCtx.createOscillator();
       var g = audioCtx.createGain();
@@ -316,9 +323,15 @@
       osc.frequency.value = freq;
       g.gain.setValueAtTime(vol, startTime);
       g.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
-      osc.connect(g); g.connect(audioCtx.destination);
+      if (pan !== undefined) {
+        var p = audioCtx.createStereoPanner();
+        p.pan.value = pan;
+        osc.connect(g); g.connect(p); p.connect(audioCtx.destination);
+      } else {
+        osc.connect(g); g.connect(audioCtx.destination);
+      }
       osc.start(startTime); osc.stop(startTime + dur);
-    } catch(e) {}
+    } catch(e) { /* ignore audio errors gracefully */ }
   }
 
   // Sfx: short rising chirp
@@ -354,8 +367,14 @@
 
   function scheduleMelody() {
     if (!musicOn || !audioCtx) return;
+    // Recover from browser auto-suspension (e.g. Chrome after ~30s idle)
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().then(function() { scheduleMelody(); });
+      return;
+    }
+    if (audioCtx.state === 'closed') return;
     var now = audioCtx.currentTime;
-    var t = now + 0.05;
+    var t = now + 0.08;
     var totalBeats = 0;
     for (var i = 0; i < melody.length; i++) {
       var f = melody[i][0];
@@ -366,19 +385,40 @@
       totalBeats += beats;
     }
     var loopMs = totalBeats * BEAT * 1000;
-    musicTimer = setTimeout(scheduleMelody, loopMs - 80);
+    // Schedule next loop slightly ahead for seamless transition
+    musicTimer = setTimeout(function() {
+      scheduleMelody();
+    }, Math.max(50, loopMs - 80));
   }
 
   function startMusic() {
     initAudio();
     if (!audioCtx) return;
-    if (audioCtx.state === 'suspended') audioCtx.resume();
     stopMusicLoop();
     musicOn = true;
+    audioResuming = false;
     try { localStorage.setItem(LS_MUSIC, '1'); } catch(e) {}
     musicBtn.textContent = '🎵';
     musicBtn.classList.remove('muted');
-    scheduleMelody();
+
+    // Must wait for resume() promise before scheduling, or desktop Chrome
+    // may schedule notes before the context is actually running.
+    function begin() {
+      if (!musicOn) return;
+      scheduleMelody();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioResuming = true;
+      audioCtx.resume().then(function() {
+        audioResuming = false;
+        begin();
+      }).catch(function() {
+        audioResuming = false;
+        begin();
+      });
+    } else {
+      begin();
+    }
   }
 
   function stopMusic() {
@@ -439,6 +479,7 @@
       html += '<tr><td class="' + rc + '">' + (i + 1) + '</td><td>' + div.innerHTML + '</td><td>' + e.score + '</td><td>' + e.length + '</td><td style="color:#888;">' + e.date + '</td></tr>';
     }
     html += '</tbody></table>';
+    html += '<p style="font-size:11px;color:#555;margin-top:8px;">💡 排行数据存储在本地浏览器中，不同设备/浏览器之间不互通</p>';
     leaderboardContent.innerHTML = html;
   }
 
@@ -455,6 +496,23 @@
       gctx.beginPath(); gctx.moveTo(pos, 0); gctx.lineTo(pos, size); gctx.stroke();
       gctx.beginPath(); gctx.moveTo(0, pos); gctx.lineTo(size, pos); gctx.stroke();
     }
+  }
+
+  // Cached food glow — avoids createRadialGradient per frame
+  function updateFoodGlowCache() {
+    var s = CELL_SIZE * 3;
+    foodGlowCache = document.createElement('canvas');
+    foodGlowCache.width = s; foodGlowCache.height = s;
+    var fc = foodGlowCache.getContext('2d');
+    var cx = s / 2, cy = s / 2;
+    var glow = fc.createRadialGradient(cx, cy, CELL_SIZE * 0.3, cx, cy, CELL_SIZE * 1.2);
+    glow.addColorStop(0, 'rgba(255,80,80,0.55)');
+    glow.addColorStop(1, 'rgba(255,80,80,0)');
+    fc.fillStyle = glow; fc.fillRect(0, 0, s, s);
+    fc.fillStyle = '#ff5050';
+    fc.beginPath(); fc.arc(cx, cy, CELL_SIZE * 0.4, 0, Math.PI * 2); fc.fill();
+    fc.fillStyle = 'rgba(255,255,255,0.4)';
+    fc.beginPath(); fc.arc(cx - 2, cy - 2, CELL_SIZE * 0.15, 0, Math.PI * 2); fc.fill();
   }
 
   // ── Game logic ─────────────────────────────────────────
@@ -525,6 +583,7 @@
     lastTime = 0; accumulator = 0; paused = false;
     particles.length = 0; pauseOverlay.classList.add('hidden');
     resizeCanvas(INITIAL_GRID);
+    updateFoodGlowCache();
     placeFood();
     scoreDisplay.textContent = '0';
     lengthDisplay.textContent = String(INITIAL_SNAKE_LENGTH);
@@ -565,17 +624,7 @@
     ctx.drawImage(gridCache, 0, 0);
 
     if (food) {
-      var fx = food.x * CELL_SIZE + CELL_SIZE / 2;
-      var fy = food.y * CELL_SIZE + CELL_SIZE / 2;
-      var glow = ctx.createRadialGradient(fx, fy, CELL_SIZE * 0.3, fx, fy, CELL_SIZE * 1.2);
-      glow.addColorStop(0, 'rgba(255,80,80,0.55)');
-      glow.addColorStop(1, 'rgba(255,80,80,0)');
-      ctx.fillStyle = glow;
-      ctx.fillRect(food.x * CELL_SIZE - CELL_SIZE, food.y * CELL_SIZE - CELL_SIZE, CELL_SIZE * 3, CELL_SIZE * 3);
-      ctx.fillStyle = '#ff5050';
-      ctx.beginPath(); ctx.arc(fx, fy, CELL_SIZE * 0.4, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.4)';
-      ctx.beginPath(); ctx.arc(fx - 2, fy - 2, CELL_SIZE * 0.15, 0, Math.PI * 2); ctx.fill();
+      ctx.drawImage(foodGlowCache, food.x * CELL_SIZE - CELL_SIZE, food.y * CELL_SIZE - CELL_SIZE);
     }
 
     var len = snake.length;
