@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>剑指Offer 刷题追踪</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --card-bg: #fff;
+    --text: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --border: #e8ecf1;
+    --accent: #4e7cff;
+    --accent-light: #eef2ff;
+    --done-bg: #e8f5e9;
+    --done-text: #388e3c;
+    --hover: #f0f3f8;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06);
+    --toast-bg: #2c3e50;
+    --online: #4caf50;
+    --offline: #ccc;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .container { max-width: 860px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  /* Header */
+  .header {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .header h1 { font-size: 24px; font-weight: 700; color: var(--text); }
+  .header .subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 4px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  /* Sync indicator */
+  .sync-indicator {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; padding: 2px 10px;
+    border-radius: 20px; font-weight: 500;
+  }
+  .sync-indicator.online { background: #e8f5e9; color: #388e3c; }
+  .sync-indicator.offline { background: #f5f5f5; color: #999; }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .sync-indicator.online .sync-dot { background: var(--online); }
+  .sync-indicator.offline .sync-dot { background: var(--offline); }
+
+  /* Stats */
+  .stats { display: flex; gap: 16px; margin-top: 20px; flex-wrap: wrap; }
+  .stat {
+    flex: 1; min-width: 120px;
+    background: var(--accent-light);
+    border-radius: 12px; padding: 16px 20px;
+    text-align: center;
+  }
+  .stat .num { font-size: 32px; font-weight: 700; color: var(--accent); }
+  .stat .label { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+  .stat.done { background: var(--done-bg); }
+  .stat.done .num { color: var(--done-text); }
+
+  /* Progress bar */
+  .progress-bar-wrap { margin-top: 16px; height: 8px; background: #e8ecf1; border-radius: 4px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.4s ease; }
+
+  /* Controls */
+  .controls { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    padding: 8px 18px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--card-bg); color: var(--text);
+    font-size: 13px; cursor: pointer; transition: all 0.15s;
+    font-family: inherit;
+  }
+  .btn:hover { background: var(--hover); border-color: #cdd3da; }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.primary:hover { opacity: 0.88; }
+  .btn.danger { color: #e74c3c; }
+  .btn.danger:hover { background: #fdecea; border-color: #e74c3c; }
+
+  /* Problem list */
+  .problem-list { display: flex; flex-direction: column; gap: 1px; }
+  .problem-list > .section-label {
+    font-size: 13px; font-weight: 600; color: var(--text-secondary);
+    padding: 20px 16px 8px; letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .problem-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px;
+    background: var(--card-bg);
+    cursor: default;
+    transition: background 0.12s, box-shadow 0.3s;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 2px;
+  }
+  .problem-item:hover { background: var(--hover); }
+  .problem-item.done-item { background: #f9fdf9; }
+  .problem-item.done-item .problem-name { color: #888; }
+  .problem-item.flash-done {
+    animation: flashGreen 0.8s ease;
+  }
+  @keyframes flashGreen {
+    0% { box-shadow: 0 0 0 0 rgba(76,175,80,0.5); background: #e8f5e9; }
+    100% { box-shadow: 0 0 0 0 rgba(76,175,80,0); background: #f9fdf9; }
+  }
+
+  .problem-num {
+    min-width: 36px; height: 36px; border-radius: 50%;
+    background: var(--bg); color: var(--text-secondary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; flex-shrink: 0;
+  }
+  .problem-item.done-item .problem-num {
+    background: var(--done-bg); color: var(--done-text);
+  }
+
+  .checkbox-wrap { flex-shrink: 0; }
+  .checkbox-wrap input[type="checkbox"] { display: none; }
+  .checkbox-wrap label {
+    display: flex; width: 22px; height: 22px;
+    border: 2px solid #cdd3da; border-radius: 50%;
+    cursor: pointer; transition: all 0.15s;
+    align-items: center; justify-content: center;
+    font-size: 12px; color: transparent;
+  }
+  .checkbox-wrap input:checked + label {
+    background: #4caf50; border-color: #4caf50; color: #fff;
+  }
+  .checkbox-wrap label:hover { border-color: var(--accent); }
+
+  .problem-name {
+    flex: 1; font-size: 15px; font-weight: 500;
+    color: var(--text); text-decoration: none;
+    transition: color 0.15s;
+  }
+  a.problem-name:hover { color: var(--accent); }
+  a.problem-name:visited { color: #8e6ab3; }
+
+  .external-icon {
+    flex-shrink: 0; color: var(--text-secondary); opacity: 0.4;
+    font-size: 14px; transition: opacity 0.15s;
+  }
+  .problem-item:hover .external-icon { opacity: 0.8; }
+
+  .auto-badge {
+    font-size: 10px; background: #e3f2fd; color: #1976d2;
+    padding: 1px 7px; border-radius: 10px; flex-shrink: 0;
+    margin-left: -8px; display: none;
+  }
+
+  /* Filter tabs */
+  .filter-tabs {
+    display: flex; gap: 6px; margin-bottom: 16px;
+    background: var(--card-bg); border-radius: 10px;
+    padding: 4px; border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .filter-tab {
+    flex: 1; text-align: center; padding: 8px 16px;
+    border-radius: 8px; font-size: 14px; cursor: pointer;
+    border: none; background: transparent; color: var(--text-secondary);
+    font-family: inherit; transition: all 0.15s;
+  }
+  .filter-tab.active { background: var(--accent); color: #fff; }
+  .filter-tab:hover:not(.active) { background: var(--hover); color: var(--text); }
+
+  /* Footer */
+  .footer { text-align: center; margin-top: 32px; color: var(--text-secondary); font-size: 12px; }
+  .footer a { color: var(--accent); text-decoration: none; }
+
+  /* Toast */
+  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: var(--toast-bg); color: #fff; padding: 12px 20px;
+    border-radius: 10px; font-size: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    display: flex; align-items: center; gap: 10px;
+    animation: slideIn 0.3s ease, fadeOut 0.3s ease 3.5s forwards;
+    max-width: 360px;
+  }
+  .toast .toast-icon { font-size: 20px; }
+  .toast.success { border-left: 4px solid #4caf50; }
+  @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; transform: translateY(-10px); } }
+
+  @media (max-width: 600px) {
+    .container { padding: 12px 8px 40px; }
+    .header { padding: 20px 18px; border-radius: 12px; }
+    .problem-item { padding: 12px 14px; gap: 10px; }
+    .problem-name { font-size: 14px; }
+    .stats { gap: 8px; }
+    .stat { padding: 12px 14px; }
+    .stat .num { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="container">
+  <div class="header">
+    <h1>剑指Offer 刷题追踪</h1>
+    <p class="subtitle">
+      题目来源：AcWing — 共 <span id="totalCount">76</span> 题
+      <span class="sync-indicator offline" id="syncIndicator">
+        <span class="sync-dot"></span>
+        <span>离线模式</span>
+      </span>
+    </p>
+    <div class="stats">
+      <div class="stat done"><div class="num" id="doneCount">0</div><div class="label">已完成</div></div>
+      <div class="stat"><div class="num" id="todoCount">76</div><div class="label">未完成</div></div>
+      <div class="stat"><div class="num" id="percent">0%</div><div class="label">完成率</div></div>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar" style="width:0%"></div></div>
+    <div class="controls">
+      <button class="btn primary" onclick="resetDone()" title="将所有题目标记为未完成">全部重置</button>
+      <button class="btn" onclick="exportProgress()">导出进度</button>
+      <button class="btn" onclick="importProgressPrompt()">导入进度</button>
+      <button class="btn danger" onclick="clearAll()">清除数据</button>
+    </div>
+  </div>
+
+  <div class="filter-tabs">
+    <button class="filter-tab active" onclick="setFilter('all', this)">全部</button>
+    <button class="filter-tab" onclick="setFilter('todo', this)">未完成</button>
+    <button class="filter-tab" onclick="setFilter('done', this)">已完成</button>
+  </div>
+
+  <div class="problem-list" id="problemList"></div>
+
+  <div class="footer">
+    题目数据来自 <a href="https://www.acwing.com/problem/search/1/?search_content=%E5%89%91%E6%8C%87Offer" target="_blank">AcWing</a>
+    &mdash; 点击题目名称即可跳转至原题页面
+    <br>
+    <span id="footerHint">安装<a href="https://www.tampermonkey.net/" target="_blank">Tampermonkey</a>并加载用户脚本，即可在AcWing提交成功后自动标记完成。</span>
+  </div>
+</div>
+
+<script>
+const problems = [
+  { id: 13, name: "找出数组中重复的数字" },
+  { id: 14, name: "不修改数组找出重复的数字" },
+  { id: 15, name: "二维数组中的查找" },
+  { id: 16, name: "替换空格" },
+  { id: 17, name: "从尾到头打印链表" },
+  { id: 18, name: "重建二叉树" },
+  { id: 19, name: "二叉树的下一个节点" },
+  { id: 20, name: "用两个栈实现队列" },
+  { id: 21, name: "斐波那契数列" },
+  { id: 22, name: "旋转数组的最小数字" },
+  { id: 23, name: "矩阵中的路径" },
+  { id: 24, name: "机器人的运动范围" },
+  { id: 25, name: "剪绳子" },
+  { id: 26, name: "二进制中1的个数" },
+  { id: 27, name: "数值的整数次方" },
+  { id: 28, name: "在O(1)时间删除链表结点" },
+  { id: 29, name: "删除链表中重复的节点" },
+  { id: 30, name: "正则表达式匹配" },
+  { id: 31, name: "表示数值的字符串" },
+  { id: 32, name: "调整数组顺序使奇数位于偶数前面" },
+  { id: 33, name: "链表中倒数第k个节点" },
+  { id: 34, name: "链表中环的入口结点" },
+  { id: 35, name: "反转链表" },
+  { id: 36, name: "合并两个排序的链表" },
+  { id: 37, name: "树的子结构" },
+  { id: 38, name: "二叉树的镜像" },
+  { id: 39, name: "对称的二叉树" },
+  { id: 40, name: "顺时针打印矩阵" },
+  { id: 41, name: "包含min函数的栈" },
+  { id: 42, name: "栈的压入、弹出序列" },
+  { id: 43, name: "不分行从上往下打印二叉树" },
+  { id: 44, name: "分行从上往下打印二叉树" },
+  { id: 45, name: "之字形打印二叉树" },
+  { id: 46, name: "二叉搜索树的后序遍历序列" },
+  { id: 47, name: "二叉树中和为某一值的路径" },
+  { id: 48, name: "复杂链表的复刻" },
+  { id: 49, name: "二叉搜索树与双向链表" },
+  { id: 50, name: "序列化二叉树" },
+  { id: 51, name: "数字排列" },
+  { id: 52, name: "数组中出现次数超过一半的数字" },
+  { id: 53, name: "最小的k个数" },
+  { id: 54, name: "数据流中的中位数" },
+  { id: 55, name: "连续子数组的最大和" },
+  { id: 56, name: "从1到n整数中1出现的次数" },
+  { id: 57, name: "数字序列中某一位的数字" },
+  { id: 58, name: "把数组排成最小的数" },
+  { id: 59, name: "把数字翻译成字符串" },
+  { id: 60, name: "礼物的最大价值" },
+  { id: 61, name: "最长不含重复字符的子字符串" },
+  { id: 62, name: "丑数" },
+  { id: 63, name: "第一个只出现一次的字符" },
+  { id: 64, name: "字符流中第一个只出现一次的字符" },
+  { id: 65, name: "数组中的逆序对" },
+  { id: 66, name: "两个链表的第一个公共结点" },
+  { id: 67, name: "数字在排序数组中出现的次数" },
+  { id: 68, name: "0到n-1中缺失的数字" },
+  { id: 69, name: "数组中数值和下标相等的元素" },
+  { id: 70, name: "二叉搜索树的第k个结点" },
+  { id: 71, name: "二叉树的深度" },
+  { id: 72, name: "平衡二叉树" },
+  { id: 73, name: "数组中只出现一次的两个数字" },
+  { id: 74, name: "数组中唯一只出现一次的数字" },
+  { id: 75, name: "和为S的两个数字" },
+  { id: 76, name: "和为S的连续正数序列" },
+  { id: 77, name: "翻转单词顺序" },
+  { id: 78, name: "左旋转字符串" },
+  { id: 79, name: "滑动窗口的最大值" },
+  { id: 80, name: "骰子的点数" },
+  { id: 81, name: "扑克牌的顺子" },
+  { id: 82, name: "圆圈中最后剩下的数字" },
+  { id: 83, name: "股票的最大利润" },
+  { id: 84, name: "求1+2+…+n" },
+  { id: 85, name: "不用加减乘除做加法" },
+  { id: 86, name: "构建乘积数组" },
+  { id: 87, name: "把字符串转换成整数" },
+  { id: 88, name: "树中两个结点的最低公共祖先" }
+];
+
+const STORAGE_KEY = 'jianzhi-offer-progress';
+const SERVER = 'http://localhost:8765';
+const isServerMode = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+
+let doneSet = new Set();
+let filter = 'all';
+let lastServerDone = new Set();
+let pollTimer = null;
+
+function getDoneSet() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) return new Set(arr);
+    }
+  } catch (e) { /* ignore */ }
+  return new Set();
+}
+
+function saveDoneSet() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...doneSet]));
+}
+
+function problemUrl(p) {
+  return 'https://www.acwing.com/problem/content/' + (p.id + 1) + '/';
+}
+
+function render(newlyDoneIds) {
+  newlyDoneIds = newlyDoneIds || new Set();
+
+  let list = problems;
+  if (filter === 'done') {
+    list = problems.filter(p => doneSet.has(p.id));
+  } else if (filter === 'todo') {
+    list = problems.filter(p => !doneSet.has(p.id));
+  }
+
+  const listEl = document.getElementById('problemList');
+  listEl.innerHTML = list.map((p, i) => {
+    const done = doneSet.has(p.id);
+    const displayNum = filter === 'all' ? p.id : (filter === 'done' ? p.id : (i + 1));
+    const flashClass = newlyDoneIds.has(p.id) ? ' flash-done' : '';
+    return `<div class="problem-item${done ? ' done-item' : ''}${flashClass}" data-id="${p.id}">
+        <div class="problem-num">${displayNum}</div>
+        <div class="checkbox-wrap">
+          <input type="checkbox" id="cb-${p.id}" ${done ? 'checked' : ''} onchange="toggle(${p.id})">
+          <label for="cb-${p.id}">&#10003;</label>
+        </div>
+        <a class="problem-name" href="${problemUrl(p)}" target="_blank" rel="noopener">${p.name}</a>
+        <span class="external-icon">↗</span>
+      </div>`;
+  }).join('');
+
+  updateStats();
+}
+
+function updateStats() {
+  const done = doneSet.size;
+  const total = problems.length;
+  const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+  document.getElementById('doneCount').textContent = done;
+  document.getElementById('todoCount').textContent = total - done;
+  document.getElementById('percent').textContent = percent + '%';
+  document.getElementById('progressBar').style.width = percent + '%';
+}
+
+function toggle(id) {
+  if (doneSet.has(id)) {
+    doneSet.delete(id);
+  } else {
+    doneSet.add(id);
+  }
+  saveDoneSet();
+  if (isServerMode && doneSet.has(id)) {
+    fetch(SERVER + '/mark-done', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ problemId: id })
+    }).catch(function() {});
+  }
+  render();
+}
+
+function markDoneRemotely(id, showToast) {
+  if (doneSet.has(id)) return;
+  doneSet.add(id);
+  saveDoneSet();
+  var newlyDone = new Set([id]);
+  render(newlyDone);
+  if (showToast !== false) {
+    var p = problems.find(function(x) { return x.id === id; });
+    if (p) showToastMessage(p);
+  }
+}
+
+function setFilter(f, btn) {
+  filter = f;
+  document.querySelectorAll('.filter-tab').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  render();
+}
+
+function resetDone() {
+  doneSet.clear();
+  saveDoneSet();
+  if (isServerMode) {
+    fetch(SERVER + '/mark-done', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ problemId: -1 })
+    }).catch(function() {});
+  }
+  render();
+}
+
+function clearAll() {
+  if (confirm('确定要清除所有本地进度数据吗？此操作不可恢复。')) {
+    doneSet.clear();
+    localStorage.removeItem(STORAGE_KEY);
+    render();
+  }
+}
+
+function exportProgress() {
+  var data = {
+    done: doneSet.size > 0 ? Array.from(doneSet).sort(function(a,b) { return a-b; }) : [],
+    total: problems.length,
+    date: new Date().toISOString()
+  };
+  var json = JSON.stringify(data, null, 2);
+  var blob = new Blob([json], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'jianzhi-offer-progress.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importProgressPrompt() {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var data = JSON.parse(e.target.result);
+        if (data.done && Array.isArray(data.done)) {
+          doneSet = new Set(data.done.filter(function(id) { return problems.some(function(p) { return p.id === id; }); }));
+          saveDoneSet();
+          render();
+          alert('进度已导入！');
+        } else {
+          alert('无效的进度文件格式。');
+        }
+      } catch (err) {
+        alert('文件解析失败，请检查文件格式。');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// --- Toast ---
+function showToastMessage(p) {
+  var container = document.getElementById('toastContainer');
+  var toast = document.createElement('div');
+  toast.className = 'toast success';
+  toast.innerHTML = '<span class="toast-icon">&#10003;</span><span>自动标记完成：<b>' + p.name + '</b></span>';
+  container.appendChild(toast);
+  setTimeout(function() {
+    if (toast.parentNode) toast.parentNode.removeChild(toast);
+  }, 4000);
+}
+
+// --- Server polling ---
+function updateSyncIndicator(online) {
+  var el = document.getElementById('syncIndicator');
+  if (online) {
+    el.className = 'sync-indicator online';
+    el.innerHTML = '<span class="sync-dot"></span><span>自动同步中</span>';
+  } else {
+    el.className = 'sync-indicator offline';
+    el.innerHTML = '<span class="sync-dot"></span><span>离线模式</span>';
+  }
+  var hint = document.getElementById('footerHint');
+  if (online) {
+    hint.textContent = 'AcWing提交成功后会自动标记完成。';
+  } else {
+    hint.innerHTML = '安装<a href="https://www.tampermonkey.net/" target="_blank">Tampermonkey</a>并加载用户脚本，即可在AcWing提交成功后自动标记完成。';
+  }
+}
+
+function pollServer() {
+  if (!isServerMode) return;
+  fetch(SERVER + '/progress')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      updateSyncIndicator(true);
+      var serverDone = new Set(data.done || []);
+      // Find newly completed problems from server
+      var newlyDone = new Set();
+      serverDone.forEach(function(id) {
+        if (!doneSet.has(id)) newlyDone.add(id);
+      });
+      if (newlyDone.size > 0) {
+        newlyDone.forEach(function(id) { doneSet.add(id); });
+        saveDoneSet();
+      }
+      // Find problems done locally but not on server
+      var missingOnServer = [];
+      doneSet.forEach(function(id) {
+        if (!serverDone.has(id)) missingOnServer.push(id);
+      });
+      // Sync missing ones to server
+      if (missingOnServer.length > 0) {
+        missingOnServer.forEach(function(id) {
+          fetch(SERVER + '/mark-done', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ problemId: id })
+          }).catch(function() {});
+        });
+      }
+      // Re-render with flash for remote completions
+      if (newlyDone.size > 0) {
+        render(newlyDone);
+        newlyDone.forEach(function(id) {
+          var p = problems.find(function(x) { return x.id === id; });
+          if (p) showToastMessage(p);
+        });
+      }
+      lastServerDone = serverDone;
+    })
+    .catch(function() {
+      updateSyncIndicator(false);
+    });
+}
+
+// --- Init ---
+doneSet = getDoneSet();
+render();
+
+if (isServerMode) {
+  // Initial fetch from server, then merge
+  fetch(SERVER + '/progress')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      updateSyncIndicator(true);
+      var serverDone = new Set(data.done || []);
+      var merged = new Set([...doneSet, ...serverDone]);
+      if (merged.size !== doneSet.size) {
+        doneSet = merged;
+        saveDoneSet();
+        render();
+      }
+      // Sync local-only items to server
+      doneSet.forEach(function(id) {
+        if (!serverDone.has(id)) {
+          fetch(SERVER + '/mark-done', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ problemId: id })
+          }).catch(function() {});
+        }
+      });
+      lastServerDone = serverDone;
+    })
+    .catch(function() {
+      updateSyncIndicator(false);
+    });
+  pollTimer = setInterval(pollServer, 3000);
+} else {
+  updateSyncIndicator(false);
+}
+</script>
+</body>
+</html>
