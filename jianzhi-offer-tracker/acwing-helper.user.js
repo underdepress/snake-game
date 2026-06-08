@@ -4,9 +4,7 @@
 // @version      1.2
 // @description  在AcWing提交通过后自动通知追踪页标记完成
 // @author       underdepress
-// @match        https://www.acwing.com/problem/content/*
-// @match        https://www.acwing.com/problem/submission*
-// @match        https://www.acwing.com/problem/*
+// @match        https://www.acwing.com/*
 // @run-at       document-start
 // @grant        none
 // ==/UserScript==
