@@ -375,7 +375,7 @@ function render(newlyDoneIds) {
           <input type="checkbox" id="cb-${p.id}" ${done ? 'checked' : ''} onchange="toggle(${p.id})">
           <label for="cb-${p.id}">&#10003;</label>
         </div>
-        <a class="problem-name" href="${problemUrl(p)}" target="_blank" rel="noopener">${p.name}</a>
+        <a class="problem-name" href="${problemUrl(p)}" target="_blank">${p.name}</a>
         <span class="external-icon">↗</span>
       </div>`;
   }).join('');
@@ -518,9 +518,9 @@ function updateSyncIndicator(online) {
   }
   var hint = document.getElementById('footerHint');
   if (online) {
-    hint.textContent = 'AcWing提交成功后会自动标记完成。';
+    hint.textContent = 'AcWing提交成功后会自动标记完成（服务器同步）。';
   } else {
-    hint.innerHTML = '安装<a href="https://www.tampermonkey.net/" target="_blank">Tampermonkey</a>并加载用户脚本，即可在AcWing提交成功后自动标记完成。';
+    hint.innerHTML = '安装<a href="https://www.tampermonkey.net/" target="_blank">Tampermonkey</a>并加载用户脚本，即可在AcWing提交成功后自动标记完成（通过postMessage，无需服务器）。';
   }
 }
 
@@ -573,6 +573,16 @@ function pollServer() {
 // --- Init ---
 doneSet = getDoneSet();
 render();
+
+// postMessage listener: receive auto-completion from userscript (no server needed)
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'acwing-accepted') {
+        var problemId = event.data.problemId;
+        if (problemId && problems.some(function(p) { return p.id === problemId; }) && !doneSet.has(problemId)) {
+            markDoneRemotely(problemId, true);
+        }
+    }
+});
 
 if (isServerMode) {
   // Initial fetch from server, then merge
