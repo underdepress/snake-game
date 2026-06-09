@@ -19,7 +19,6 @@
     --shadow: 0 1px 3px rgba(0,0,0,0.06);
     --toast-bg: #2c3e50;
     --online: #4caf50;
-    --offline: #ccc;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -41,19 +40,7 @@
     border: 1px solid var(--border);
   }
   .header h1 { font-size: 24px; font-weight: 700; color: var(--text); }
-  .header .subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 4px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-
-  /* Sync indicator */
-  .sync-indicator {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-size: 12px; padding: 2px 10px;
-    border-radius: 20px; font-weight: 500;
-  }
-  .sync-indicator.online { background: #e8f5e9; color: #388e3c; }
-  .sync-indicator.offline { background: #f5f5f5; color: #999; }
-  .sync-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
-  .sync-indicator.online .sync-dot { background: var(--online); }
-  .sync-indicator.offline .sync-dot { background: var(--offline); }
+  .header .subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
 
   /* Stats */
   .stats { display: flex; gap: 16px; margin-top: 20px; flex-wrap: wrap; }
@@ -88,11 +75,6 @@
 
   /* Problem list */
   .problem-list { display: flex; flex-direction: column; gap: 1px; }
-  .problem-list > .section-label {
-    font-size: 13px; font-weight: 600; color: var(--text-secondary);
-    padding: 20px 16px 8px; letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
   .problem-item {
     display: flex; align-items: center; gap: 14px;
     padding: 14px 18px;
@@ -152,12 +134,6 @@
   }
   .problem-item:hover .external-icon { opacity: 0.8; }
 
-  .auto-badge {
-    font-size: 10px; background: #e3f2fd; color: #1976d2;
-    padding: 1px 7px; border-radius: 10px; flex-shrink: 0;
-    margin-left: -8px; display: none;
-  }
-
   /* Filter tabs */
   .filter-tabs {
     display: flex; gap: 6px; margin-bottom: 16px;
@@ -209,13 +185,7 @@
 <div class="container">
   <div class="header">
     <h1>剑指Offer 刷题追踪</h1>
-    <p class="subtitle">
-      题目来源：AcWing — 共 <span id="totalCount">76</span> 题
-      <span class="sync-indicator offline" id="syncIndicator">
-        <span class="sync-dot"></span>
-        <span>离线模式</span>
-      </span>
-    </p>
+    <p class="subtitle">题目来源：AcWing — 共 <span id="totalCount">76</span> 题</p>
     <div class="stats">
       <div class="stat done"><div class="num" id="doneCount">0</div><div class="label">已完成</div></div>
       <div class="stat"><div class="num" id="todoCount">76</div><div class="label">未完成</div></div>
@@ -223,7 +193,7 @@
     </div>
     <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar" style="width:0%"></div></div>
     <div class="controls">
-      <button class="btn primary" onclick="resetDone()" title="将所有题目标记为未完成">全部重置</button>
+      <button class="btn primary" onclick="resetDone()">全部重置</button>
       <button class="btn" onclick="exportProgress()">导出进度</button>
       <button class="btn" onclick="importProgressPrompt()">导入进度</button>
       <button class="btn danger" onclick="clearAll()">清除数据</button>
@@ -240,9 +210,9 @@
 
   <div class="footer">
     题目数据来自 <a href="https://www.acwing.com/problem/search/1/?search_content=%E5%89%91%E6%8C%87Offer" target="_blank">AcWing</a>
-    &mdash; 点击题目名称即可跳转至原题页面
+    — 点击题目名称跳转刷题，提交通过后自动标记完成
     <br>
-    <span id="footerHint">安装<a href="https://www.tampermonkey.net/" target="_blank">Tampermonkey</a>并加载用户脚本，即可在AcWing提交成功后自动标记完成。</span>
+    需安装 <a href="https://www.tampermonkey.net/" target="_blank">Tampermonkey</a> 并加载<a href="acwing-helper.user.js">用户脚本</a>（postMessage，无需服务器）
   </div>
 </div>
 
@@ -327,13 +297,9 @@ const problems = [
 ];
 
 const STORAGE_KEY = 'jianzhi-offer-progress';
-const SERVER = 'http://localhost:8765';
-const isServerMode = window.location.protocol === 'http:' || window.location.protocol === 'https:';
 
 let doneSet = new Set();
 let filter = 'all';
-let lastServerDone = new Set();
-let pollTimer = null;
 
 function getDoneSet() {
   try {
@@ -367,10 +333,9 @@ function render(newlyDoneIds) {
   const listEl = document.getElementById('problemList');
   listEl.innerHTML = list.map((p, i) => {
     const done = doneSet.has(p.id);
-    const displayNum = filter === 'all' ? p.id : (filter === 'done' ? p.id : (i + 1));
     const flashClass = newlyDoneIds.has(p.id) ? ' flash-done' : '';
     return `<div class="problem-item${done ? ' done-item' : ''}${flashClass}" data-id="${p.id}">
-        <div class="problem-num">${displayNum}</div>
+        <div class="problem-num">${p.id}</div>
         <div class="checkbox-wrap">
           <input type="checkbox" id="cb-${p.id}" ${done ? 'checked' : ''} onchange="toggle(${p.id})">
           <label for="cb-${p.id}">&#10003;</label>
@@ -400,26 +365,16 @@ function toggle(id) {
     doneSet.add(id);
   }
   saveDoneSet();
-  if (isServerMode && doneSet.has(id)) {
-    fetch(SERVER + '/mark-done', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ problemId: id })
-    }).catch(function() {});
-  }
   render();
 }
 
-function markDoneRemotely(id, showToast) {
+function markDoneRemotely(id) {
   if (doneSet.has(id)) return;
   doneSet.add(id);
   saveDoneSet();
-  var newlyDone = new Set([id]);
-  render(newlyDone);
-  if (showToast !== false) {
-    var p = problems.find(function(x) { return x.id === id; });
-    if (p) showToastMessage(p);
-  }
+  render(new Set([id]));
+  var p = problems.find(function(x) { return x.id === id; });
+  if (p) showToastMessage(p);
 }
 
 function setFilter(f, btn) {
@@ -432,13 +387,6 @@ function setFilter(f, btn) {
 function resetDone() {
   doneSet.clear();
   saveDoneSet();
-  if (isServerMode) {
-    fetch(SERVER + '/mark-done', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ problemId: -1 })
-    }).catch(function() {});
-  }
   render();
 }
 
@@ -494,7 +442,6 @@ function importProgressPrompt() {
   input.click();
 }
 
-// --- Toast ---
 function showToastMessage(p) {
   var container = document.getElementById('toastContainer');
   var toast = document.createElement('div');
@@ -506,116 +453,19 @@ function showToastMessage(p) {
   }, 4000);
 }
 
-// --- Server polling ---
-function updateSyncIndicator(online) {
-  var el = document.getElementById('syncIndicator');
-  if (online) {
-    el.className = 'sync-indicator online';
-    el.innerHTML = '<span class="sync-dot"></span><span>自动同步中</span>';
-  } else {
-    el.className = 'sync-indicator offline';
-    el.innerHTML = '<span class="sync-dot"></span><span>离线模式</span>';
-  }
-  var hint = document.getElementById('footerHint');
-  if (online) {
-    hint.textContent = 'AcWing提交成功后会自动标记完成（服务器同步）。';
-  } else {
-    hint.innerHTML = '安装<a href="https://www.tampermonkey.net/" target="_blank">Tampermonkey</a>并加载用户脚本，即可在AcWing提交成功后自动标记完成（通过postMessage，无需服务器）。';
-  }
-}
-
-function pollServer() {
-  if (!isServerMode) return;
-  fetch(SERVER + '/progress')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      updateSyncIndicator(true);
-      var serverDone = new Set(data.done || []);
-      // Find newly completed problems from server
-      var newlyDone = new Set();
-      serverDone.forEach(function(id) {
-        if (!doneSet.has(id)) newlyDone.add(id);
-      });
-      if (newlyDone.size > 0) {
-        newlyDone.forEach(function(id) { doneSet.add(id); });
-        saveDoneSet();
-      }
-      // Find problems done locally but not on server
-      var missingOnServer = [];
-      doneSet.forEach(function(id) {
-        if (!serverDone.has(id)) missingOnServer.push(id);
-      });
-      // Sync missing ones to server
-      if (missingOnServer.length > 0) {
-        missingOnServer.forEach(function(id) {
-          fetch(SERVER + '/mark-done', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ problemId: id })
-          }).catch(function() {});
-        });
-      }
-      // Re-render with flash for remote completions
-      if (newlyDone.size > 0) {
-        render(newlyDone);
-        newlyDone.forEach(function(id) {
-          var p = problems.find(function(x) { return x.id === id; });
-          if (p) showToastMessage(p);
-        });
-      }
-      lastServerDone = serverDone;
-    })
-    .catch(function() {
-      updateSyncIndicator(false);
-    });
-}
-
-// --- Init ---
-doneSet = getDoneSet();
-render();
-
-// postMessage listener: receive auto-completion from userscript (no server needed)
+// postMessage: 接收用户脚本的自动完成通知
 window.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'acwing-accepted') {
         var problemId = event.data.problemId;
-        if (problemId && problems.some(function(p) { return p.id === problemId; }) && !doneSet.has(problemId)) {
-            markDoneRemotely(problemId, true);
+        if (problemId && problems.some(function(p) { return p.id === problemId; })) {
+            markDoneRemotely(problemId);
         }
     }
 });
 
-if (isServerMode) {
-  // Initial fetch from server, then merge
-  fetch(SERVER + '/progress')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      updateSyncIndicator(true);
-      var serverDone = new Set(data.done || []);
-      var merged = new Set([...doneSet, ...serverDone]);
-      if (merged.size !== doneSet.size) {
-        doneSet = merged;
-        saveDoneSet();
-        render();
-      }
-      // Sync local-only items to server
-      doneSet.forEach(function(id) {
-        if (!serverDone.has(id)) {
-          fetch(SERVER + '/mark-done', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ problemId: id })
-          }).catch(function() {});
-        }
-      });
-      lastServerDone = serverDone;
-    })
-    .catch(function() {
-      updateSyncIndicator(false);
-    });
-  pollTimer = setInterval(pollServer, 3000);
-} else {
-  updateSyncIndicator(false);
-}
+// Init
+doneSet = getDoneSet();
+render();
 </script>
 </body>
 </html>
