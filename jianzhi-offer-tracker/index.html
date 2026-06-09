@@ -395,7 +395,7 @@ function render(newlyDoneIds) {
           <label for="cb-${p.id}">&#10003;</label>
         </div>
         <a class="problem-name" href="${problemUrl(p)}" onclick="event.preventDefault();window.open(this.href);">${p.name}</a>
-        <button class="lock-btn${lockedSet.has(p.id) ? ' locked' : ''}" id="lock-${p.id}" onclick="event.stopPropagation();toggleLock(${p.id})" title="锁定/解锁">${lockedSet.has(p.id) ? "🔒" : "🔓"}</button> <span class="external-icon">↗</span>
+        <button class="lock-btn${lockedSet.has(p.id) ? ' locked' : ''}" id="lock-${p.id}" onclick="event.stopPropagation();toggleLock(${p.id})" title="锁定/解锁">${lockedSet.has(p.id) ? "🔒" : "🔓"}</button>
       </div>`;
   }).join('');
 
