@@ -453,7 +453,7 @@ function showToastMessage(p) {
   }, 4000);
 }
 
-// postMessage: 接收用户脚本的自动完成通知
+// postMessage: 接收用户脚本的自动完成通知（需 opener 存在）
 window.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'acwing-accepted') {
         var problemId = event.data.problemId;
@@ -463,8 +463,30 @@ window.addEventListener('message', function(event) {
     }
 });
 
+// Hash-based completion: userscript redirects here with #done=<pid>
+function checkHash() {
+    var m = location.hash.match(/^#done=(\d+)/);
+    if (m) {
+        var pid = parseInt(m[1], 10);
+        if (problems.some(function(p) { return p.id === pid; }) && !doneSet.has(pid)) {
+            markDoneRemotely(pid);
+        }
+        // Clean the hash so refresh doesn't re-trigger
+        history.replaceState(null, '', location.pathname + location.search);
+    }
+}
+
+// storage event: when another tracker tab marks a problem, this tab auto-refreshes
+window.addEventListener('storage', function(e) {
+    if (e.key === STORAGE_KEY) {
+        doneSet = getDoneSet();
+        render();
+    }
+});
+
 // Init
 doneSet = getDoneSet();
+checkHash();
 render();
 </script>
 </body>

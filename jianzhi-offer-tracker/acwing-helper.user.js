@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         AcWing 剑指Offer 自动追踪
 // @namespace    https://github.com/underdepress/acwing-tracker
-// @version      2.2
-// @description  AcWing提交通过后自动通知追踪页标记完成（postMessage，无需服务器）
+// @version      2.3
+// @description  AcWing提交通过后自动跳转回追踪页标记完成（无需服务器）
 // @author       underdepress
 // @match        https://www.acwing.com/*
 // @run-at       document-idle
@@ -12,12 +12,13 @@
 (function() {
     'use strict';
 
+    var TRACKER_URL = 'https://underdepress.github.io/snake-game/jianzhi-offer-tracker/index.html';
     var notified = false;
 
-    // Show a small badge so we know the script is active
+    // Visible badge so we know the script is active
     var badge = document.createElement('div');
     badge.style.cssText = 'position:fixed;top:0;right:0;background:#4caf50;color:#fff;padding:2px 8px;font-size:11px;z-index:99999;border-radius:0 0 0 6px;font-family:sans-serif;';
-    badge.textContent = '✓ 追踪已激活';
+    badge.textContent = '追踪已激活';
     document.documentElement.appendChild(badge);
 
     function log(msg) {
@@ -25,13 +26,11 @@
     }
 
     function getProblemId() {
-        // Try from URL first
         var m = location.href.match(/\/problem\/content\/(\d+)/);
         if (m) {
             var pid = parseInt(m[1], 10) - 1;
             if (pid >= 13 && pid <= 88) return pid;
         }
-        // Try to find problem link on submission detail page
         var link = document.querySelector('a[href*="/problem/content/"]');
         if (link) {
             var m2 = link.href.match(/\/problem\/content\/(\d+)/);
@@ -43,32 +42,31 @@
         return null;
     }
 
-    function notify(problemId) {
+    function markDone(problemId) {
         if (notified) return;
         notified = true;
-        badge.textContent = '✓ 已通知';
+        badge.textContent = '已标记，跳转中...';
         badge.style.background = '#2196f3';
-        log('notify: problemId=' + problemId + ' opener=' + !!(window.opener && window.opener !== window));
-        if (window.opener && window.opener !== window) {
-            window.opener.postMessage({ type: 'acwing-accepted', problemId: problemId }, '*');
-            log('postMessage sent');
-        } else {
-            log('ERROR: window.opener is null, cannot send postMessage');
-        }
+        log('markDone: pid=' + problemId);
+        // Navigate back to tracker with completion hash
+        window.location.href = TRACKER_URL + '#done=' + problemId;
     }
 
     function scanForAccepted() {
         if (notified) return;
         var bodyText = (document.body.innerText || document.body.textContent || '');
         if (bodyText.indexOf('Accepted') !== -1 || bodyText.indexOf('答案正确') !== -1) {
-            log('Detected Accepted in page text');
+            log('Detected Accepted');
             var pid = getProblemId();
-            if (pid) notify(pid);
-            else log('Could not determine problem ID from URL: ' + location.href);
+            if (pid) {
+                markDone(pid);
+            } else {
+                log('Could not determine problem ID from URL: ' + location.href);
+            }
         }
     }
 
-    log('Script v2.2 loaded. URL: ' + location.href + ' pid: ' + getProblemId() + ' opener: ' + !!(window.opener && window.opener !== window));
+    log('Script v2.3 loaded. URL: ' + location.href + ' pid: ' + getProblemId());
 
     // Scan on initial page load (for page-reload submissions)
     setTimeout(scanForAccepted, 2000);
