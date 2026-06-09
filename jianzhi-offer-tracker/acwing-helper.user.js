@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AcWing 剑指Offer 自动追踪
 // @namespace    https://github.com/underdepress/acwing-tracker
-// @version      2.5
+// @version      2.6
 // @description  AcWing提交通过后自动跳转回追踪页标记完成
 // @author       underdepress
 // @match        https://www.acwing.com/*
@@ -55,13 +55,10 @@
 
     function containsVerdict(text) {
         if (!text) return false;
-        // Try multiple patterns that AcWing might use
-        if (text.indexOf('Accepted') !== -1) return true;
+        var lower = text.toLowerCase();
+        if (lower.indexOf('accepted') !== -1) return true;
+        if (lower.indexOf('accept') !== -1) return true;
         if (text.indexOf('答案正确') !== -1) return true;
-        if (/\bAC\b/.test(text)) return true;
-        // In case they use Accept without 'ed'
-        var t = text.trim();
-        if (t === 'Accept') return true;
         return false;
     }
 

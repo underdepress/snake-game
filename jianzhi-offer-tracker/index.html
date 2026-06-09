@@ -323,6 +323,28 @@ function saveDoneSet() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify([...doneSet]));
 }
 
+function migrateOldProgress() {
+  try {
+    var oldRaw = localStorage.getItem('jianzhi-offer-progress');
+    if (!oldRaw) return;
+    var oldArr = JSON.parse(oldRaw);
+    if (!Array.isArray(oldArr) || oldArr.length === 0) return;
+    var migrated = 0;
+    for (var i = 0; i < oldArr.length; i++) {
+      var newId = oldArr[i] + 1;
+      if (newId >= 14 && newId <= 90 && newId !== 53 &&
+          problems.some(function(p) { return p.id === newId; })) {
+        if (!doneSet.has(newId)) { doneSet.add(newId); migrated++; }
+      }
+    }
+    if (migrated > 0) {
+      saveDoneSet();
+      console.log('Migrated ' + migrated + ' old progress entries to v2');
+    }
+    localStorage.removeItem('jianzhi-offer-progress');
+  } catch(e) {}
+}
+
 function getLockedSet() {
   try {
     const raw = localStorage.getItem(LOCK_KEY);
@@ -525,6 +547,7 @@ window.addEventListener('storage', function(e) {
 // Init
 doneSet = getDoneSet();
 lockedSet = getLockedSet();
+migrateOldProgress();
 checkHash();
 render();
 </script>
