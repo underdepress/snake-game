@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         AcWing 剑指Offer 自动追踪
 // @namespace    https://github.com/underdepress/acwing-tracker
-// @version      2.3
-// @description  AcWing提交通过后自动跳转回追踪页标记完成（无需服务器）
+// @version      2.4
+// @description  AcWing提交通过后自动跳转回追踪页标记完成
 // @author       underdepress
 // @match        https://www.acwing.com/*
 // @run-at       document-idle
@@ -14,8 +14,8 @@
 
     var TRACKER_URL = 'https://underdepress.github.io/snake-game/jianzhi-offer-tracker/index.html';
     var notified = false;
+    var scanCount = 0;
 
-    // Visible badge so we know the script is active
     var badge = document.createElement('div');
     badge.style.cssText = 'position:fixed;top:0;right:0;background:#4caf50;color:#fff;padding:2px 8px;font-size:11px;z-index:99999;border-radius:0 0 0 6px;font-family:sans-serif;';
     badge.textContent = '追踪已激活';
@@ -26,14 +26,16 @@
     }
 
     function getProblemId() {
+        // Try URL first
         var m = location.href.match(/\/problem\/content\/(\d+)/);
         if (m) {
             var pid = parseInt(m[1], 10) - 1;
             if (pid >= 13 && pid <= 88) return pid;
         }
-        var link = document.querySelector('a[href*="/problem/content/"]');
-        if (link) {
-            var m2 = link.href.match(/\/problem\/content\/(\d+)/);
+        // Try submission detail page - look for link back to problem
+        var links = document.querySelectorAll('a[href*="/problem/content/"]');
+        for (var i = 0; i < links.length; i++) {
+            var m2 = links[i].href.match(/\/problem\/content\/(\d+)/);
             if (m2) {
                 var pid2 = parseInt(m2[1], 10) - 1;
                 if (pid2 >= 13 && pid2 <= 88) return pid2;
@@ -48,35 +50,73 @@
         badge.textContent = '已标记，跳转中...';
         badge.style.background = '#2196f3';
         log('markDone: pid=' + problemId);
-        // Navigate back to tracker with completion hash
         window.location.href = TRACKER_URL + '#done=' + problemId;
     }
 
+    function containsVerdict(text) {
+        if (!text) return false;
+        // Try multiple patterns that AcWing might use
+        if (text.indexOf('Accepted') !== -1) return true;
+        if (text.indexOf('答案正确') !== -1) return true;
+        if (/\bAC\b/.test(text)) return true;
+        // In case they use Accept without 'ed'
+        var t = text.trim();
+        if (t === 'Accept') return true;
+        return false;
+    }
+
     function scanForAccepted() {
+        scanCount++;
         if (notified) return;
-        var bodyText = (document.body.innerText || document.body.textContent || '');
-        if (bodyText.indexOf('Accepted') !== -1 || bodyText.indexOf('答案正确') !== -1) {
-            log('Detected Accepted');
+        // Check document title
+        var title = document.title || '';
+        if (containsVerdict(title)) {
+            log('Detected in title: "' + title + '"');
+        }
+        // Check body text
+        var bodyText = document.body ? (document.body.innerText || document.body.textContent || '') : '';
+        if (containsVerdict(bodyText)) {
+            log('Detected in body (scan #' + scanCount + '), text sample: ' + bodyText.substring(0, 200));
             var pid = getProblemId();
             if (pid) {
                 markDone(pid);
             } else {
-                log('Could not determine problem ID from URL: ' + location.href);
+                log('Could not determine problem ID. URL: ' + location.href);
+                // Dump all links for debugging
+                var links = document.querySelectorAll('a[href*="problem"]');
+                for (var i = 0; i < Math.min(links.length, 10); i++) {
+                    log('  link: ' + links[i].href);
+                }
             }
+        }
+        // Also check inside iframes
+        var frames = document.querySelectorAll('iframe');
+        for (var i = 0; i < frames.length; i++) {
+            try {
+                var frameBody = frames[i].contentDocument ? (frames[i].contentDocument.body.innerText || '') : '';
+                if (containsVerdict(frameBody)) {
+                    log('Detected in iframe #' + i);
+                    var pid2 = getProblemId();
+                    if (pid2) markDone(pid2);
+                    return;
+                }
+            } catch(e) {}
         }
     }
 
-    log('Script v2.3 loaded. URL: ' + location.href + ' pid: ' + getProblemId());
+    log('Script v2.4 loaded. URL: ' + location.href + ' pid: ' + getProblemId());
 
-    // Scan on initial page load (for page-reload submissions)
+    // Initial scan
     setTimeout(scanForAccepted, 2000);
 
-    // Watch for dynamic DOM changes (for AJAX submissions)
+    // DOM change watch
     var timer = null;
     var observer = new MutationObserver(function() {
         if (timer) clearTimeout(timer);
         timer = setTimeout(scanForAccepted, 1000);
     });
-
     observer.observe(document.documentElement, { childList: true, characterData: true, subtree: true });
+
+    // Periodic fallback scan every 5 seconds (catches anything missed by mutation observer)
+    setInterval(scanForAccepted, 5000);
 })();

@@ -134,6 +134,11 @@
   }
   .problem-item:hover .external-icon { opacity: 0.8; }
 
+  /* Lock button */
+  .lock-btn { flex-shrink: 0; background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px; opacity: 0.3; transition: opacity 0.15s; }
+  .lock-btn:hover { opacity: 0.7; }
+  .lock-btn.locked { opacity: 0.9; }
+
   /* Filter tabs */
   .filter-tabs {
     display: flex; gap: 6px; margin-bottom: 16px;
@@ -299,6 +304,8 @@ const problems = [
 const STORAGE_KEY = 'jianzhi-offer-progress';
 
 let doneSet = new Set();
+const LOCK_KEY = 'jianzhi-offer-locks';
+let lockedSet = new Set();
 let filter = 'all';
 
 function getDoneSet() {
@@ -314,6 +321,31 @@ function getDoneSet() {
 
 function saveDoneSet() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify([...doneSet]));
+}
+
+function getLockedSet() {
+  try {
+    const raw = localStorage.getItem(LOCK_KEY);
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) return new Set(arr);
+    }
+  } catch (e) {}
+  return new Set();
+}
+
+function saveLockedSet() {
+  localStorage.setItem(LOCK_KEY, JSON.stringify([...lockedSet]));
+}
+
+function toggleLock(id) {
+  if (lockedSet.has(id)) {
+    lockedSet.delete(id);
+  } else {
+    lockedSet.add(id);
+  }
+  saveLockedSet();
+  render();
 }
 
 function problemUrl(p) {
@@ -341,7 +373,7 @@ function render(newlyDoneIds) {
           <label for="cb-${p.id}">&#10003;</label>
         </div>
         <a class="problem-name" href="${problemUrl(p)}" onclick="event.preventDefault();window.open(this.href);">${p.name}</a>
-        <span class="external-icon">↗</span>
+        <button class="lock-btn${lockedSet.has(p.id) ? ' locked' : ''}" id="lock-${p.id}" onclick="event.stopPropagation();toggleLock(${p.id})" title="锁定/解锁">${lockedSet.has(p.id) ? "🔒" : "🔓"}</button> <span class="external-icon">↗</span>
       </div>`;
   }).join('');
 
@@ -385,15 +417,21 @@ function setFilter(f, btn) {
 }
 
 function resetDone() {
+  var locked = new Set();
+  lockedSet.forEach(function(id) { if (doneSet.has(id)) locked.add(id); });
   doneSet.clear();
+  locked.forEach(function(id) { doneSet.add(id); });
   saveDoneSet();
   render();
 }
 
 function clearAll() {
-  if (confirm('确定要清除所有本地进度数据吗？此操作不可恢复。')) {
+  if (confirm('确定要清除所有本地进度数据吗？锁定的题目不受影响。')) {
+    var locked = new Set();
+    lockedSet.forEach(function(id) { if (doneSet.has(id)) locked.add(id); });
     doneSet.clear();
-    localStorage.removeItem(STORAGE_KEY);
+    locked.forEach(function(id) { doneSet.add(id); });
+    saveDoneSet();
     render();
   }
 }
@@ -486,6 +524,7 @@ window.addEventListener('storage', function(e) {
 
 // Init
 doneSet = getDoneSet();
+lockedSet = getLockedSet();
 checkHash();
 render();
 </script>
