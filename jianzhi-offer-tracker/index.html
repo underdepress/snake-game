@@ -340,7 +340,7 @@ function render(newlyDoneIds) {
           <input type="checkbox" id="cb-${p.id}" ${done ? 'checked' : ''} onchange="toggle(${p.id})">
           <label for="cb-${p.id}">&#10003;</label>
         </div>
-        <a class="problem-name" href="${problemUrl(p)}" target="_blank">${p.name}</a>
+        <a class="problem-name" href="${problemUrl(p)}" onclick="event.preventDefault();window.open(this.href);">${p.name}</a>
         <span class="external-icon">↗</span>
       </div>`;
   }).join('');
