@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AcWing 剑指Offer 自动追踪
 // @namespace    https://github.com/underdepress/acwing-tracker
-// @version      2.4
+// @version      2.5
 // @description  AcWing提交通过后自动跳转回追踪页标记完成
 // @author       underdepress
 // @match        https://www.acwing.com/*
@@ -29,16 +29,16 @@
         // Try URL first
         var m = location.href.match(/\/problem\/content\/(\d+)/);
         if (m) {
-            var pid = parseInt(m[1], 10) - 1;
-            if (pid >= 13 && pid <= 88) return pid;
+            var pid = parseInt(m[1], 10) ;
+            if (pid >= 14 && pid <= 90) return (pid !== 53) ? pid : null;
         }
         // Try submission detail page - look for link back to problem
         var links = document.querySelectorAll('a[href*="/problem/content/"]');
         for (var i = 0; i < links.length; i++) {
             var m2 = links[i].href.match(/\/problem\/content\/(\d+)/);
             if (m2) {
-                var pid2 = parseInt(m2[1], 10) - 1;
-                if (pid2 >= 13 && pid2 <= 88) return pid2;
+                var pid2 = parseInt(m2[1], 10) ;
+                if (pid2 >= 14 && pid2 <= 90) return (pid2 !== 53) ? pid2 : null;
             }
         }
         return null;
