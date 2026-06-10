@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         AcWing 剑指Offer 自动追踪
 // @namespace    https://github.com/underdepress/acwing-tracker
-// @version      2.6
-// @description  AcWing提交通过后自动跳转回追踪页标记完成
+// @version      2.7
+// @description  AcWing提交通过后自动跳转回追踪页标记完成，标记后自动关闭当前页面
 // @author       underdepress
 // @match        https://www.acwing.com/*
 // @run-at       document-idle
@@ -101,7 +101,7 @@
         }
     }
 
-    log('Script v2.4 loaded. URL: ' + location.href + ' pid: ' + getProblemId());
+    log('Script v2.7 loaded. URL: ' + location.href + ' pid: ' + getProblemId());
 
     // Initial scan
     setTimeout(scanForAccepted, 2000);

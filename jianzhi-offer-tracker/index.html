@@ -531,8 +531,12 @@ function checkHash() {
         if (problems.some(function(p) { return p.id === pid; }) && !doneSet.has(pid)) {
             markDoneRemotely(pid);
         }
-        // Clean the hash so refresh doesn't re-trigger
         history.replaceState(null, '', location.pathname + location.search);
+        // Auto-close redirect tab to avoid duplicate tracker pages
+        if (window.opener && !window.opener.closed) {
+            try { window.opener.focus(); } catch(e) {}
+            window.close();
+        }
     }
 }
 
