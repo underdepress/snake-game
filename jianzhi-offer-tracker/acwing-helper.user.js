@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         AcWing 剑指Offer 自动追踪
 // @namespace    https://github.com/underdepress/acwing-tracker
-// @version      2.7
-// @description  AcWing提交通过后自动跳转回追踪页标记完成，标记后自动关闭当前页面
+// @version      2.8
+// @description  AcWing提交通过后postMessage通知追踪页并关闭当前标签，不产生重复页面
 // @author       underdepress
 // @match        https://www.acwing.com/*
 // @run-at       document-idle
@@ -47,10 +47,23 @@
     function markDone(problemId) {
         if (notified) return;
         notified = true;
-        badge.textContent = '已标记，跳转中...';
-        badge.style.background = '#2196f3';
+        badge.textContent = '已标记';
+        badge.style.background = '#4caf50';
         log('markDone: pid=' + problemId);
-        window.location.href = TRACKER_URL + '#done=' + problemId;
+
+        // If this tab was opened from the tracker, notify via postMessage and close self.
+        // Otherwise, fall back to redirecting to the tracker page.
+        if (window.opener && !window.opener.closed) {
+            window.opener.postMessage({ type: 'acwing-accepted', problemId: problemId }, '*');
+            try { window.opener.focus(); } catch(e) {}
+            window.close();
+            // If close() was blocked by the browser, the badge will show "已标记" so
+            // the user can manually close this tab.
+        } else {
+            badge.textContent = '已标记，跳转中...';
+            badge.style.background = '#2196f3';
+            window.location.href = TRACKER_URL + '#done=' + problemId;
+        }
     }
 
     function containsVerdict(text) {
@@ -101,7 +114,7 @@
         }
     }
 
-    log('Script v2.7 loaded. URL: ' + location.href + ' pid: ' + getProblemId());
+    log('Script v2.8 loaded. URL: ' + location.href + ' pid: ' + getProblemId());
 
     // Initial scan
     setTimeout(scanForAccepted, 2000);
