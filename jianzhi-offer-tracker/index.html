@@ -384,6 +384,13 @@ function render(newlyDoneIds) {
     list = problems.filter(p => !doneSet.has(p.id));
   }
 
+  // 未锁定在前，锁定在后，各自保持原顺序
+  list = [...list].sort((a, b) => {
+    const aLock = lockedSet.has(a.id) ? 1 : 0;
+    const bLock = lockedSet.has(b.id) ? 1 : 0;
+    return aLock - bLock;
+  });
+
   const listEl = document.getElementById('problemList');
   listEl.innerHTML = list.map((p, i) => {
     const done = doneSet.has(p.id);
