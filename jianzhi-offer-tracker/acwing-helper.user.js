@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AcWing 剑指Offer 自动追踪
 // @namespace    https://github.com/underdepress/acwing-tracker
-// @version      2.9
+// @version      2.10
 // @description  AcWing提交通过后postMessage通知追踪页并关闭当前标签，不产生重复页面
 // @author       underdepress
 // @match        https://www.acwing.com/*
@@ -73,7 +73,6 @@
         if (lower.indexOf('accepted') !== -1) return true;
         if (lower.indexOf('accept') !== -1) return true;
 	    if (text.indexOf('答案正确') !== -1) return true;
-	    if (text.indexOf('通过') !== -1) return true;
         return false;
     }
 
