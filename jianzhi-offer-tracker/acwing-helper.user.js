@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AcWing 剑指Offer 自动追踪
 // @namespace    https://github.com/underdepress/acwing-tracker
-// @version      2.8
+// @version      2.9
 // @description  AcWing提交通过后postMessage通知追踪页并关闭当前标签，不产生重复页面
 // @author       underdepress
 // @match        https://www.acwing.com/*
@@ -14,6 +14,7 @@
 
     var TRACKER_URL = 'https://underdepress.github.io/snake-game/jianzhi-offer-tracker/index.html';
     var notified = false;
+    var lastPid = getProblemId();
     var scanCount = 0;
 
     var badge = document.createElement('div');
@@ -71,7 +72,8 @@
         var lower = text.toLowerCase();
         if (lower.indexOf('accepted') !== -1) return true;
         if (lower.indexOf('accept') !== -1) return true;
-        if (text.indexOf('答案正确') !== -1) return true;
+	    if (text.indexOf('答案正确') !== -1) return true;
+	    if (text.indexOf('通过') !== -1) return true;
         return false;
     }
 
@@ -114,7 +116,7 @@
         }
     }
 
-    log('Script v2.8 loaded. URL: ' + location.href + ' pid: ' + getProblemId());
+    log('Script v2.9 loaded. URL: ' + location.href + ' pid: ' + getProblemId());
 
     // Initial scan
     setTimeout(scanForAccepted, 2000);
@@ -129,4 +131,20 @@
 
     // Periodic fallback scan every 5 seconds (catches anything missed by mutation observer)
     setInterval(scanForAccepted, 5000);
+
+    // SPA navigation: reset detection state when navigating to a new problem
+    function checkUrlChange() {
+        var currentPid = getProblemId();
+        if (currentPid !== lastPid) {
+            log('SPA navigation detected: pid ' + lastPid + ' -> ' + currentPid);
+            lastPid = currentPid;
+            notified = false;
+            scanCount = 0;
+            badge.textContent = '追踪已激活';
+            badge.style.background = '#4caf50';
+            setTimeout(scanForAccepted, 2000);
+        }
+    }
+    setInterval(checkUrlChange, 3000);
+    window.addEventListener('hashchange', checkUrlChange);
 })();
