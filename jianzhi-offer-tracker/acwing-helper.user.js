@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AcWing 剑指Offer 自动追踪
 // @namespace    https://github.com/underdepress/acwing-tracker
-// @version      2.10
+// @version      2.11
 // @description  AcWing提交通过后postMessage通知追踪页并关闭当前标签，不产生重复页面
 // @author       underdepress
 // @match        https://www.acwing.com/*
@@ -15,6 +15,7 @@
     var TRACKER_URL = 'https://underdepress.github.io/snake-game/jianzhi-offer-tracker/index.html';
     var notified = false;
     var lastPid = getProblemId();
+    var cachedPid = lastPid;  // fallback for pages where getProblemId() returns null
     var scanCount = 0;
 
     var badge = document.createElement('div');
@@ -31,7 +32,11 @@
         var m = location.href.match(/\/problem\/content\/(\d+)/);
         if (m) {
             var pid = parseInt(m[1], 10) ;
-            if (pid >= 14 && pid <= 90) return (pid !== 53) ? pid : null;
+            if (pid >= 14 && pid <= 90 && pid !== 53) {
+                cachedPid = pid;
+                return pid;
+            }
+            return null;
         }
         // Try submission detail page - look for link back to problem
         var links = document.querySelectorAll('a[href*="/problem/content/"]');
@@ -39,7 +44,10 @@
             var m2 = links[i].href.match(/\/problem\/content\/(\d+)/);
             if (m2) {
                 var pid2 = parseInt(m2[1], 10) ;
-                if (pid2 >= 14 && pid2 <= 90) return (pid2 !== 53) ? pid2 : null;
+                if (pid2 >= 14 && pid2 <= 90 && pid2 !== 53) {
+                    cachedPid = pid2;
+                    return pid2;
+                }
             }
         }
         return null;
@@ -79,27 +87,32 @@
     function scanForAccepted() {
         scanCount++;
         if (notified) return;
-        // Check document title
+
         var title = document.title || '';
-        if (containsVerdict(title)) {
+        var bodyText = document.body ? (document.body.innerText || document.body.textContent || '') : '';
+        var detectedInTitle = containsVerdict(title);
+        var detectedInBody = containsVerdict(bodyText);
+
+        if (detectedInTitle) {
             log('Detected in title: "' + title + '"');
         }
-        // Check body text
-        var bodyText = document.body ? (document.body.innerText || document.body.textContent || '') : '';
-        if (containsVerdict(bodyText)) {
+        if (detectedInBody) {
             log('Detected in body (scan #' + scanCount + '), text sample: ' + bodyText.substring(0, 200));
-            var pid = getProblemId();
+        }
+
+        if (detectedInTitle || detectedInBody) {
+            var pid = getProblemId() || cachedPid;
             if (pid) {
                 markDone(pid);
             } else {
                 log('Could not determine problem ID. URL: ' + location.href);
-                // Dump all links for debugging
                 var links = document.querySelectorAll('a[href*="problem"]');
                 for (var i = 0; i < Math.min(links.length, 10); i++) {
                     log('  link: ' + links[i].href);
                 }
             }
         }
+
         // Also check inside iframes
         var frames = document.querySelectorAll('iframe');
         for (var i = 0; i < frames.length; i++) {
@@ -107,7 +120,7 @@
                 var frameBody = frames[i].contentDocument ? (frames[i].contentDocument.body.innerText || '') : '';
                 if (containsVerdict(frameBody)) {
                     log('Detected in iframe #' + i);
-                    var pid2 = getProblemId();
+                    var pid2 = getProblemId() || cachedPid;
                     if (pid2) markDone(pid2);
                     return;
                 }
@@ -115,7 +128,7 @@
         }
     }
 
-    log('Script v2.9 loaded. URL: ' + location.href + ' pid: ' + getProblemId());
+    log('Script v2.11 loaded. URL: ' + location.href + ' pid: ' + getProblemId());
 
     // Initial scan
     setTimeout(scanForAccepted, 2000);
@@ -132,11 +145,12 @@
     setInterval(scanForAccepted, 5000);
 
     // SPA navigation: reset detection state when navigating to a new problem
-    function checkUrlChange() {
+    function resetIfUrlChanged() {
         var currentPid = getProblemId();
         if (currentPid !== lastPid) {
-            log('SPA navigation detected: pid ' + lastPid + ' -> ' + currentPid);
+            log('Navigation detected: pid ' + lastPid + ' -> ' + currentPid);
             lastPid = currentPid;
+            if (currentPid !== null) cachedPid = currentPid;
             notified = false;
             scanCount = 0;
             badge.textContent = '追踪已激活';
@@ -144,6 +158,36 @@
             setTimeout(scanForAccepted, 2000);
         }
     }
-    setInterval(checkUrlChange, 3000);
-    window.addEventListener('hashchange', checkUrlChange);
+    setInterval(resetIfUrlChanged, 1500);
+
+    // Immediate check on visibility restore (tab switch / minimize → restore)
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            resetIfUrlChanged();
+            if (!notified) setTimeout(scanForAccepted, 500);
+        }
+    });
+
+    // bfcache restore
+    window.addEventListener('pageshow', function(e) {
+        if (e.persisted) {
+            resetIfUrlChanged();
+            if (!notified) setTimeout(scanForAccepted, 500);
+        }
+    });
+
+    // Detect SPA navigation via History API
+    var origPushState = history.pushState;
+    history.pushState = function() {
+        origPushState.apply(this, arguments);
+        setTimeout(resetIfUrlChanged, 200);
+    };
+    var origReplaceState = history.replaceState;
+    history.replaceState = function() {
+        origReplaceState.apply(this, arguments);
+        setTimeout(resetIfUrlChanged, 200);
+    };
+    window.addEventListener('popstate', function() {
+        setTimeout(resetIfUrlChanged, 200);
+    });
 })();
